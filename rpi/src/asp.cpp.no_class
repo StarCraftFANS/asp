@@ -1,0 +1,266 @@
+// ************************************************************************
+// *                                                                      *
+// * Copyright (C) 2014 Bonden i Nol (hakanbrolin@hotmail.com)            *
+// *                                                                      *
+// * This program is free software; you can redistribute it and/or modify *
+// * it under the terms of the GNU General Public License as published by *
+// * the Free Software Foundation; either version 2 of the License, or    *
+// * (at your option) any later version.                                  *
+// *                                                                      *
+// ************************************************************************
+
+#include <stdio.h>
+#include <stdarg.h>     /* va_list, va_start, va_arg, va_end */
+
+#include "asp.h"
+#include "asp_hw.h"
+#include "gpio.h"
+#include "at89s52_io.h"
+
+using namespace std;
+
+/////////////////////////////////////////////////////////////////////////////
+//               Definitions of macros
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+//               Support types
+/////////////////////////////////////////////////////////////////////////////
+typedef long (*asp_chip_func_p) (...); // Function pointer:
+                                       // - Return long
+                                       // - Variable number of arguments
+
+/////////////////////////////////////////////////////////////////////////////
+//               Function prototypes
+/////////////////////////////////////////////////////////////////////////////
+static long internal_initialize(void);
+static long internal_finalize(void);
+static long chip_enable_programming(void);
+static void chip_disable_programming(void);
+static long execute_chip_func(asp_chip_func_p chip_func, ...);
+
+/////////////////////////////////////////////////////////////////////////////
+//               Global variables
+/////////////////////////////////////////////////////////////////////////////
+static GPIO_FUNCTION g_pin_reset_old_func;
+static gpio *g_gpio = 0;
+static at89s52_io *g_at89s52_io = 0;
+
+/////////////////////////////////////////////////////////////////////////////
+//               Public functions
+/////////////////////////////////////////////////////////////////////////////
+
+static long joe1(void)
+{
+  printf("+++JOE: (joe)\n");
+  return ASP_SUCCESS;
+}
+
+static long joe2(va_list args)
+{
+  int val = va_arg(args, int);
+
+  printf("+++JOE: (joe2) arg=%d\n", val);
+  return ASP_SUCCESS;
+}
+
+static long joe3(va_list args)
+{
+
+  const char *val = va_arg(args, const char*);
+
+  printf("+++JOE: (joe3) arg=%s\n", val);
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+long asp_chip_probe()
+{
+  printf("+++JOE: (probe) \n");
+
+  long rc;
+  asp_chip_func_p func_p = 0;
+
+  func_p = (asp_chip_func_p) joe1;
+  func_p = (asp_chip_func_p) joe2;
+  func_p = (asp_chip_func_p) joe3;
+  
+  //int joe_val = 1972; // joe2
+  const char joe_val[] = "/proj/olle.txt"; // joe3
+
+  rc = execute_chip_func(func_p, joe_val);
+  printf("+++JOE: rc=%ld\n", rc);
+
+  return ASP_SUCCESS;
+  
+  /*
+  long rc;
+
+  rc = internal_initialize();     // Initialize internal resources
+  if (rc != ASP_SUCCESS) {
+    return rc;
+  }
+
+  rc = chip_enable_programming(); // Enable programming
+  if (rc != ASP_SUCCESS) {
+    internal_finalize();
+    return rc;
+  }
+
+  chip_disable_programming();     // Disable programming 
+
+  rc = internal_finalize();       // Finalize internal resources
+  if (rc != ASP_SUCCESS) {
+    return rc;
+  }
+
+  return ASP_SUCCESS;
+  */
+}
+
+////////////////////////////////////////////////////////////////
+
+long asp_chip_read(const string file_path)
+{
+  printf("+++JOE: (r) file=%s\n", file_path.c_str());
+
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+long asp_chip_write(const string file_path)
+{
+  printf("+++JOE: (w) file=%s\n", file_path.c_str());
+
+  return ASP_SUCCESS;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//               Private functions
+/////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////
+
+static long internal_initialize(void)
+{
+  long rc;
+
+  // Create GPIO object for RESET
+  g_gpio = new gpio();
+  rc = g_gpio->initialize();
+  if (rc != GPIO_SUCCESS) {
+    printf("*** ERROR : Initialize GPIO, rc=%ld\n", rc);   
+    delete g_gpio;
+    return ASP_FAILURE;
+  }
+  g_gpio->get_function(ASP_PIN_RESET, g_pin_reset_old_func);
+  g_gpio->set_function(ASP_PIN_RESET, GPIO_FUNC_OUT);
+
+  // Create AT89S52 I/O object
+  g_at89s52_io = new at89s52_io(ASP_SPI_DEV,
+				ASP_SPI_SPEED);
+  rc = g_at89s52_io->initialize();
+  if (rc != AT89S52_SUCCESS) {
+    printf("*** ERROR : Initialize AT89S52, rc=%ld\n", rc);
+    delete g_at89s52_io;
+    g_gpio->set_function(ASP_PIN_RESET, g_pin_reset_old_func);
+    g_gpio->finalize();
+    delete g_gpio;    
+    return ASP_FAILURE;
+  }
+
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+static long internal_finalize(void)
+{
+  long rc;
+
+  // Clean-up
+  rc = g_at89s52_io->finalize();
+  if (rc != AT89S52_SUCCESS) {
+    printf("*** ERROR : Finalize AT89S52, rc=%ld\n", rc);
+    delete g_at89s52_io;
+    g_gpio->set_function(ASP_PIN_RESET, g_pin_reset_old_func);
+    g_gpio->finalize();
+    delete g_gpio;
+    return ASP_FAILURE;
+  }
+  g_gpio->set_function(ASP_PIN_RESET, g_pin_reset_old_func);
+  rc = g_gpio->finalize();
+  if (rc != GPIO_SUCCESS) {
+    printf("*** ERROR : Finalize GPIO, rc=%ld\n", rc);
+    delete g_at89s52_io;
+    delete g_gpio;
+    return ASP_FAILURE;
+  }
+  
+  delete g_at89s52_io;
+  delete g_gpio;
+
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+static long chip_enable_programming(void)
+{
+  long rc;
+
+  g_gpio->set_pin_high(ASP_PIN_RESET);     // Activate RESET pin
+
+  rc = g_at89s52_io->enable_programming(); // Enable serial programming
+  if (rc != AT89S52_SUCCESS) {
+    printf("*** ERROR : Enable programming AT89S52, rc=%ld\n", rc);
+    return ASP_FAILURE;
+  }
+
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+static void chip_disable_programming(void)
+{
+  g_gpio->set_pin_low(ASP_PIN_RESET); // Deactivate RESET pin
+}
+
+////////////////////////////////////////////////////////////////
+
+static long execute_chip_func(asp_chip_func_p chip_func, ...)
+{
+  long rc;
+
+  va_list ap;
+  va_start(ap, chip_func);
+  rc = chip_func(ap);
+  va_end(ap);
+
+  return rc;
+
+  rc = internal_initialize();     // Initialize internal resources
+  if (rc != ASP_SUCCESS) {
+    return rc;
+  }
+
+  rc = chip_enable_programming(); // Enable programming
+  if (rc != ASP_SUCCESS) {
+    internal_finalize();
+    return rc;
+  }
+
+  chip_disable_programming();     // Disable programming 
+
+  rc = internal_finalize();       // Finalize internal resources
+  if (rc != ASP_SUCCESS) {
+    return rc;
+  }
+
+  return ASP_SUCCESS;
+}

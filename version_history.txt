@@ -1,0 +1,8 @@
+==================================================================
+16/11-2014 EMWHBR
+
+*) R1A01
+
+*) Original
+
+*) Tested using target microcontroller AT89S52@12MHz.
