@@ -16,6 +16,6 @@
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
 #define ASP_PRODUCT_NUMBER    "ASP"
-#define ASP_PRODUCT_REVISION  "R1A01"
+#define ASP_PRODUCT_REVISION  "R1A02"
 
 #endif // __ASP_PROD_INFO_H__
