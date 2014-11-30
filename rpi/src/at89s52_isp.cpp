@@ -44,15 +44,17 @@ at89s52_isp::at89s52_isp(void)
   m_at89s52_io = new at89s52_io(ASP_SPI_DEV,
 				ASP_SPI_SPEED);
 
-  // Create data buffer
-  m_buffer = new uint8_t[ISP_BUFFER_SIZE];
+  // Create data buffers
+  m_buffer1 = new uint8_t[ISP_BUFFER_SIZE];
+  m_buffer2 = new uint8_t[ISP_BUFFER_SIZE];
 }
 
 ////////////////////////////////////////////////////////////////
 
 at89s52_isp::~at89s52_isp(void)
 {
-  delete[] m_buffer;
+  delete[] m_buffer2;
+  delete[] m_buffer1;
   delete m_at89s52_io;
   delete m_gpio;  
 }
@@ -163,6 +165,40 @@ long at89s52_isp::read_bin(const string file_path)
 
 ////////////////////////////////////////////////////////////////
 
+long at89s52_isp::verify_hex(const string file_path)
+{
+  try {
+    this->enable_isp();  // Activate RESET pin
+    this->isp_verify_hex(file_path);
+    this->disable_isp(); // Deactivate RESET pin
+  }
+  catch (...) {
+    this->disable_isp(); // Deactivate RESET pin
+    return AT89S52_ISP_FAILURE;
+  }
+
+  return AT89S52_ISP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+long at89s52_isp::verify_bin(const string file_path)
+{
+  try {
+    this->enable_isp();  // Activate RESET pin
+    this->isp_verify_bin(file_path);
+    this->disable_isp(); // Deactivate RESET pin
+  }
+  catch (...) {
+    this->disable_isp(); // Deactivate RESET pin
+    return AT89S52_ISP_FAILURE;
+  }
+
+  return AT89S52_ISP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
 long at89s52_isp::write_hex(const string file_path)
 {
   try {
@@ -200,6 +236,27 @@ long at89s52_isp::write_bin(const string file_path)
 /////////////////////////////////////////////////////////////////////////////
 //               Private member functions
 /////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////
+
+int at89s52_isp::get_file_size(const string file_path)
+{
+  ifstream data_file(file_path.c_str(),
+		     ios_base::in | ios::binary);
+
+  if (!data_file.is_open()) {
+    printf("*** ERROR : File size failed for file %s\n", file_path.c_str());
+    throw internal_error;
+  }
+
+  // Get size of file in bytes
+  int nr_bytes;
+  data_file.seekg(0, ios::end);
+  nr_bytes = data_file.tellg();
+  data_file.close();
+
+  return nr_bytes;
+}
 
 ////////////////////////////////////////////////////////////////
 
@@ -278,28 +335,28 @@ void at89s52_isp::isp_read_bin(const string file_path)
   if (!data_file.is_open()) {
     printf("*** ERROR : Open failed for file %s\n", file_path.c_str());
     throw internal_error;
-  }
-
-  // Get size of chip in bytes and buffers
-  int nr_bytes = AT89S52_FLASH_MEMORY_SIZE;
-  int nr_buffers = nr_bytes / ISP_BUFFER_SIZE;
+  }  
 
   long rc;
   uint16_t addr = 0;
 
   // Read data from chip (one buffer at a time), write to file
   try {
+    // Get size of chip in bytes and buffers
+    int nr_bytes = AT89S52_FLASH_MEMORY_SIZE;
+    int nr_buffers = nr_bytes / ISP_BUFFER_SIZE;
+
     // Read full buffers from chip
     while (nr_buffers) {
       rc = m_at89s52_io->read_flash(addr,
-				    m_buffer,
+				    m_buffer1,
 				    ISP_BUFFER_SIZE);
       if (rc != AT89S52_SUCCESS) {
 	printf("*** ERROR : Read flash AT89S52, addr=0x%04x, rc=%ld\n",
 	       addr, rc);
 	throw internal_error;
       }
-      data_file.write((char *)m_buffer, ISP_BUFFER_SIZE);
+      data_file.write((char *)m_buffer1, ISP_BUFFER_SIZE);
       addr += ISP_BUFFER_SIZE;
       nr_bytes -= ISP_BUFFER_SIZE;
       nr_buffers--;
@@ -308,14 +365,154 @@ void at89s52_isp::isp_read_bin(const string file_path)
     // Read remaining bytes from chip
     if (nr_bytes) {
       rc = m_at89s52_io->read_flash(addr,
-				    m_buffer,
+				    m_buffer1,
 				    nr_bytes);
       if (rc != AT89S52_SUCCESS) {
 	printf("*** ERROR : Write flash AT89S52, addr=0x%04x, rc=%ld\n",
 	       addr, rc);
 	throw internal_error;
       }
-      data_file.write((char *)m_buffer, nr_bytes);
+      data_file.write((char *)m_buffer1, nr_bytes);
+    }
+  }
+  catch (...) {
+    data_file.close();
+    throw;
+  }
+  data_file.close();
+}
+
+////////////////////////////////////////////////////////////////
+
+void at89s52_isp::isp_verify_hex(const string file_path)
+{
+  ihex *ihex_p = new ihex(file_path);
+  int ihex_records;
+  uint16_t addr, succ_addr;
+  IHEX_RECORD ihex_rec;
+  uint8_t chip_data[IHEX_RECORD_MAX_BYTES];
+  long rc;
+  
+  try {
+    // Parse Intel HEX file
+    if (ihex_p->parse() != IHEX_SUCCESS) {
+      printf("*** ERROR : Parsing HEX file %s\n", file_path.c_str());
+      throw internal_error;
+    }
+
+    // Check parse result
+    ihex_records = ihex_p->nr_records();
+    if (!ihex_records) {
+      printf("*** ERROR : No records in HEX file %s\n", file_path.c_str());
+      throw internal_error;
+    }
+    if (!ihex_p->get_min_addr(addr)) {
+      printf("*** ERROR : No min addr in HEX file %s\n", file_path.c_str());
+      throw internal_error;
+    }
+
+    // Handle all Intel HEX records
+    while (ihex_records) {
+      if (!ihex_p->get_record(addr, &ihex_rec)) {
+	printf("*** ERROR: No record found for addr=0x%04x\n", addr);
+	throw internal_error;
+      }
+      if (--ihex_records) {
+	if (!ihex_p->get_in_order_successor(addr, succ_addr)) {
+	  printf("*** ERROR: No successor for addr=0x%04x\n", addr);
+	  throw internal_error;
+	}
+	addr = succ_addr;      
+      }
+      // Read data from chip
+      rc = m_at89s52_io->read_flash(ihex_rec.addr,
+				    chip_data,
+				    ihex_rec.nbytes);
+      if (rc != AT89S52_SUCCESS) {
+	printf("*** ERROR : Read flash AT89S52, addr=0x%04x, rc=%ld\n",
+	       ihex_rec.addr, rc);
+	throw internal_error;
+      }
+      // Compare HEX record data and chip
+      for (int i=0; i < ihex_rec.nbytes; i++) {
+	if (ihex_rec.data[i] != chip_data[i]) {
+	  printf("*** ERROR : Verify flash AT89S52, addr=0x%04x, file=0x%02x, chip=0x%02x\n",
+		 ihex_rec.addr + i, ihex_rec.data[i], chip_data[i]);
+	  throw internal_error;	    
+	}
+      }
+    }
+  }
+  catch (...) {
+    delete ihex_p;
+    throw;
+  }
+  delete ihex_p;
+}
+
+////////////////////////////////////////////////////////////////
+
+void at89s52_isp::isp_verify_bin(const string file_path)
+{
+  // Source file from where data shall be read
+  ifstream data_file(file_path.c_str(),
+		     ios_base::in | ios::binary);
+
+  if (!data_file.is_open()) {
+    printf("*** ERROR : Open failed for file %s\n", file_path.c_str());
+    throw internal_error;
+  }
+
+  long rc;
+  uint16_t addr = 0;
+  
+  // Read data from file (one buffer at a time), verify against chip
+  try {
+    // Get size of file in bytes and buffers
+    int nr_bytes = this->get_file_size(file_path);
+    int nr_buffers = nr_bytes / ISP_BUFFER_SIZE;
+
+    // Verify full buffers
+    while (nr_buffers) {
+      data_file.read((char *)m_buffer1, ISP_BUFFER_SIZE);
+      rc = m_at89s52_io->read_flash(addr,
+				    m_buffer2,
+				    ISP_BUFFER_SIZE);
+      if (rc != AT89S52_SUCCESS) {
+	printf("*** ERROR : Read flash AT89S52, addr=0x%04x, rc=%ld\n",
+	       addr, rc);
+	throw internal_error;
+      }
+      for (int i=0; i < ISP_BUFFER_SIZE; i++) {
+	if (m_buffer1[i] != m_buffer2[i]) {
+	  printf("*** ERROR : Verify flash AT89S52, addr=0x%04x, file=0x%02x, chip=0x%02x\n",
+		 addr + i, m_buffer1[i], m_buffer2[i]);
+	  throw internal_error;	    
+	}
+      }
+      addr += ISP_BUFFER_SIZE;
+      nr_bytes -= ISP_BUFFER_SIZE;
+      nr_buffers--;
+    }
+
+    // Verify remaining bytes
+    if (nr_bytes) {
+      data_file.read((char *)m_buffer1, nr_bytes);
+      rc = m_at89s52_io->read_flash(addr,
+				    m_buffer2,
+				    nr_bytes);
+      if (rc != AT89S52_SUCCESS) {
+	printf("*** ERROR : Read flash AT89S52, addr=0x%04x, rc=%ld\n",
+	       addr, rc);
+	throw internal_error;
+      }
+      for (int i=0; i < nr_bytes; i++) {
+	if (m_buffer1[i] != m_buffer2[i]) {
+	  printf("*** ERROR : Verify flash AT89S52, addr=0x%04x, file=0x%02x, chip=0x%02x\n",
+		 addr + i, m_buffer1[i], m_buffer2[i]);
+	  throw internal_error;	    
+	}
+      }
     }
   }
   catch (...) {
@@ -397,23 +594,20 @@ void at89s52_isp::isp_write_bin(const string file_path)
     throw internal_error;
   }
 
-  // Get size of file in bytes and buffers
-  int nr_bytes;
-  data_file.seekg(0, ios::end);
-  nr_bytes = data_file.tellg();
-  data_file.seekg(0, ios::beg);
-  int nr_buffers = nr_bytes / ISP_BUFFER_SIZE;
-
   long rc;
   uint16_t addr = 0;
   
   // Read data from file (one buffer at a time), write to chip
   try {
+    // Get size of file in bytes and buffers
+    int nr_bytes = this->get_file_size(file_path);
+    int nr_buffers = nr_bytes / ISP_BUFFER_SIZE;
+
     // Write full buffers to chip
     while (nr_buffers) {
-      data_file.read((char *)m_buffer, ISP_BUFFER_SIZE);
+      data_file.read((char *)m_buffer1, ISP_BUFFER_SIZE);
       rc = m_at89s52_io->write_flash(addr,
-				     m_buffer,
+				     m_buffer1,
 				     ISP_BUFFER_SIZE);
       if (rc != AT89S52_SUCCESS) {
 	printf("*** ERROR : Write flash AT89S52, addr=0x%04x, rc=%ld\n",
@@ -427,9 +621,9 @@ void at89s52_isp::isp_write_bin(const string file_path)
 
     // Write remaining bytes to chip
     if (nr_bytes) {
-      data_file.read((char *)m_buffer, nr_bytes);
+      data_file.read((char *)m_buffer1, nr_bytes);
       rc = m_at89s52_io->write_flash(addr,
-				     m_buffer,
+				     m_buffer1,
 				     nr_bytes);
       if (rc != AT89S52_SUCCESS) {
 	printf("*** ERROR : Write flash AT89S52, addr=0x%04x, rc=%ld\n",

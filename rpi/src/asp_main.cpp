@@ -32,7 +32,8 @@ using namespace std;
 #define APP_MODE_PROBE  0x02
 #define APP_MODE_READ   0x04
 #define APP_MODE_TEST   0x08
-#define APP_MODE_WRITE  0x10
+#define APP_MODE_VERIFY 0x10
+#define APP_MODE_WRITE  0x20
 
 #define FILE_FORMAT_BIN  0x01
 #define FILE_FORMAT_HEX  0x02
@@ -92,7 +93,8 @@ static bool app_parse_command_line(int argc, char *argv[])
     {"probe",   no_argument,       0, 'p'},
     {"read",    required_argument, 0, 'r'},
     {"test",    no_argument,       0, 't'},
-    {"write",   required_argument, 0, 'w'},
+    {"verify",  required_argument, 0, 'v'},
+    {"write",   required_argument, 0, 'w'},    
     {"version", no_argument,       0, 'V'},
     {0,         no_argument,       0, 'b'},
     {0,         no_argument,       0, 'x'},
@@ -100,7 +102,7 @@ static bool app_parse_command_line(int argc, char *argv[])
   };
 
   while (1) {
-    c = getopt_long(argc, argv, "ehpr:tw:Vbx",
+    c = getopt_long(argc, argv, "ehpr:tv:w:Vbx",
 		    long_options, &option_index);
     
     // Detect the end of the options
@@ -136,6 +138,11 @@ static bool app_parse_command_line(int argc, char *argv[])
 
     case 't':
       g_app_mode |= APP_MODE_TEST;
+      break;
+
+    case 'v':
+      g_app_mode |= APP_MODE_VERIFY;
+      g_input_file = optarg;
       break;
 
     case 'w':
@@ -186,8 +193,9 @@ static bool app_check_command_line(void)
     }
   }
 
-  // Write mode requires file format
-  if ( g_app_mode & APP_MODE_WRITE ) {
+  // Write/verify mode requires file format
+  if ( (g_app_mode & APP_MODE_WRITE) ||
+       (g_app_mode & APP_MODE_VERIFY) ) {
     if (!g_file_format) {
       return false; // Format must be specified
     }
@@ -222,10 +230,13 @@ static void app_report_help(const char *app_name)
 	  << "    Read from chip flash program memory, write to file in binary format.\n\n"
 
 	  << "-t, --test\n"
-	  << "    Test mode for development.\n\n"	 
+	  << "    Test mode for development.\n\n"
+
+	  << "-v, --verify <path_to_file> [-b|-x]\n"
+	  << "    Verify the contents of chip flash program memory against the file in binary/HEX format.\n\n"
 
 	  << "-w, --write <path_to_input_file> [-b|-x]\n"
-	  << "    Write to chip flash program memory, read from file in binary/HEX format.\n\n"	 
+	  << "    Write to chip flash program memory, read from file in binary/HEX format.\n\n"
     
 	  << "-V, --version\n"
 	  << "    Print the product information and exit.\n";
@@ -281,6 +292,10 @@ int main(int argc, char *argv[])
     break;
   case APP_MODE_TEST:
     rc = asp_test_ui_execute();
+    break;
+  case APP_MODE_VERIFY:
+    rc = asp_chip_verify(g_input_file,
+			 g_file_format == FILE_FORMAT_HEX);
     break;
   case APP_MODE_WRITE:
     rc = asp_chip_write(g_input_file,

@@ -94,6 +94,24 @@ long asp_chip_read(const string file_path)
 
 ////////////////////////////////////////////////////////////////
 
+long asp_chip_verify(const string file_path,
+		     bool hex_format)
+{
+  if (hex_format) {
+    if (g_at89s52_isp->verify_hex(file_path) != AT89S52_ISP_SUCCESS) {
+      return ASP_FAILURE;
+    }
+  }
+  else {
+    if (g_at89s52_isp->verify_bin(file_path) != AT89S52_ISP_SUCCESS) {
+      return ASP_FAILURE;
+    }
+  }
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
 long asp_chip_write(const string file_path,
 		    bool hex_format)
 {

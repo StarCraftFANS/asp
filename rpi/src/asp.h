@@ -31,6 +31,8 @@ long asp_finalize(void);
 long asp_chip_probe();
 long asp_chip_erase(void);
 long asp_chip_read(const string file_path);
+long asp_chip_verify(const string file_path,
+		     bool hex_format);
 long asp_chip_write(const string file_path,
 		    bool hex_format);
 

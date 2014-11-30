@@ -48,6 +48,8 @@ class at89s52_isp {
   long probe(void);
   long erase(void);
   long read_bin(const string file_path);
+  long verify_hex(const string file_path);
+  long verify_bin(const string file_path);
   long write_hex(const string file_path);
   long write_bin(const string file_path);
   
@@ -55,13 +57,18 @@ class at89s52_isp {
   at89s52_io   *m_at89s52_io;
   gpio         *m_gpio;
   GPIO_FUNCTION m_pin_reset_func;
-  uint8_t      *m_buffer;
+  uint8_t      *m_buffer1;
+  uint8_t      *m_buffer2;
+
+  int get_file_size(const string file_path);
 
   void enable_isp(void);
   void disable_isp(void);
   void isp_probe(void);
   void isp_erase(void);
   void isp_read_bin(const string file_path);
+  void isp_verify_hex(const string file_path);
+  void isp_verify_bin(const string file_path);
   void isp_write_hex(const string file_path);
   void isp_write_bin(const string file_path);
 };
