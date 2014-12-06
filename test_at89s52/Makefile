@@ -24,7 +24,12 @@ SRC_DIR = ./src
 
 APP = test_at89s52
 
-APP_OBJS = $(OBJ_DIR)/main.rel
+# According to "SDCC Compiler User Guide":
+# The file containing main() must be first, since the
+# linkage editor processes files in the order the they are presented.
+APP_OBJS = $(OBJ_DIR)/main.rel \
+           $(OBJ_DIR)/delay.rel \
+           $(OBJ_DIR)/rs232.rel
 
 APP_HEX = $(OBJ_DIR)/$(APP).hex
 APP_BIN = $(OBJ_DIR)/$(APP).bin

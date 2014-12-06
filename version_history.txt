@@ -1,4 +1,15 @@
 ==================================================================
+6/12-2014 EMWHBR
+
+*) R1A03
+
+*) Modified test application for AT89S52:
+   - Multiple source files (main.c, rs232.c and delay.c).
+   - Implemented delay functionality using TIMER0.
+
+*) Tested using target microcontroller AT89S52@12MHz.
+
+==================================================================
 30/11-2014 EMWHBR
 
 *) R1A02

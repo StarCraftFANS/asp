@@ -10,9 +10,8 @@
 // ************************************************************************
 
 #include <mcs51/at89x52.h> //Alternative : #include <mcs51/8052.h>
-#include <stdint.h>
+#include <string.h>
 
-#include "delay.h"
 #include "rs232.h"
 
 // Implementation notes:
@@ -27,62 +26,60 @@
 //
 
 /////////////////////////////////////////////////////////////////////////////
-//               Definition of macros
+//               Public functions
 /////////////////////////////////////////////////////////////////////////////
-#define TEST_LED_PIN  P2_0
-#define TEST_BUT_PIN  P2_1
-
-#define TEST_LED_ON   (TEST_LED_PIN = 1)
-#define TEST_LED_OFF  (TEST_LED_PIN = 0)
-
-#define DELAY_TIME_US  50000 // Microseconds, 0..65535
 
 ////////////////////////////////////////////////////////////////
 
-void main(void)
+void rs232_initialize(void)
 {
-  int led_cnt = 10;
+  SCON = 0x50;  // serial (mode 1) : 8 data bit, 1 start bit, 1 stop bit
+  TMOD = 0x20;  // timer1 (mode 2) : 8-bit, auto reload
+  TH1 = 0xF3;   // baud rate 2400
+  TL1 = 0xF3;   // baud rate 2400
+  PCON |= SMOD; // double baud rate => 4800
+  TR1 = 1;      // enable timer
+  TI = 1;       // enable transmitting
+  RI = 0;       // waiting to receive
+}
 
-  // Initialize hardware
-  TEST_BUT_PIN = 1; // Input
-  TEST_LED_ON;
-  delay_initialize();
-  rs232_initialize();
-  TEST_LED_OFF;
+////////////////////////////////////////////////////////////////
 
-  // Blink LED
-  while (led_cnt--) {
-    TEST_LED_ON;
-    delay_usleep(DELAY_TIME_US);
-    TEST_LED_OFF;
-    delay_usleep(DELAY_TIME_US);
+char rs232_get_char(void)
+{
+  char c;
+
+  while (!RI); // wait to receive
+  c = SBUF;    // receive from serial
+  RI = 0;
+  return c;
+}
+
+////////////////////////////////////////////////////////////////
+
+void rs232_put_char(char c)
+{
+  while (!TI); // wait end of last transmission
+  TI = 0;
+  SBUF = c;    // transmit to serial
+}
+
+////////////////////////////////////////////////////////////////
+
+void rs232_put_string(const char *s)
+{
+  int i;
+
+  for (i=0; i< strlen(s); i++) {
+    rs232_put_char(s[i]);
   }
+}
 
-  // Main loop
-  while (1) {
-    // Check button
-    if (TEST_BUT_PIN == 1) {
-      TEST_LED_ON;
-    }
-    else {
-      TEST_LED_OFF;
-    }
+////////////////////////////////////////////////////////////////
 
-    // Print message
-    rs232_put_char('K');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('L');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('A');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('R');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('A');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('\n');
-    delay_usleep(DELAY_TIME_US);
-
-    rs232_putln_string("BROLIN");
-    delay_usleep(DELAY_TIME_US);
-  }
+void rs232_putln_string(const char *s)
+{
+  rs232_put_string(s);
+  rs232_put_char(10); // Line feed
+  rs232_put_char(13); // Carriage return
 }

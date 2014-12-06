@@ -10,14 +10,13 @@
 // ************************************************************************
 
 #include <mcs51/at89x52.h> //Alternative : #include <mcs51/8052.h>
-#include <stdint.h>
 
 #include "delay.h"
-#include "rs232.h"
 
 // Implementation notes:
 // 1. General
 //    Assumes AT89S52@12MHz.
+//    Using TIMER0 as 16-bit timer to implement delay (no interrupts).
 //
 // 2. AT89S52 datasheet, Document: 1919D-MICRO-6/08
 //    http://www.atmel.com/
@@ -27,62 +26,34 @@
 //
 
 /////////////////////////////////////////////////////////////////////////////
-//               Definition of macros
+//               Public functions
 /////////////////////////////////////////////////////////////////////////////
-#define TEST_LED_PIN  P2_0
-#define TEST_BUT_PIN  P2_1
-
-#define TEST_LED_ON   (TEST_LED_PIN = 1)
-#define TEST_LED_OFF  (TEST_LED_PIN = 0)
-
-#define DELAY_TIME_US  50000 // Microseconds, 0..65535
 
 ////////////////////////////////////////////////////////////////
 
-void main(void)
+void delay_initialize(void)
 {
-  int led_cnt = 10;
+  TR0 = 0; // Turn off TIMER0
+  TF0 = 0; // Clear TIMER0 overflow flag
+}
 
-  // Initialize hardware
-  TEST_BUT_PIN = 1; // Input
-  TEST_LED_ON;
-  delay_initialize();
-  rs232_initialize();
-  TEST_LED_OFF;
+////////////////////////////////////////////////////////////////
 
-  // Blink LED
-  while (led_cnt--) {
-    TEST_LED_ON;
-    delay_usleep(DELAY_TIME_US);
-    TEST_LED_OFF;
-    delay_usleep(DELAY_TIME_US);
-  }
+void delay_usleep(uint16_t usec)
+{
+  uint16_t timer_val;
 
-  // Main loop
-  while (1) {
-    // Check button
-    if (TEST_BUT_PIN == 1) {
-      TEST_LED_ON;
-    }
-    else {
-      TEST_LED_OFF;
-    }
+  // Set TIMER0 as 16-bit timer (mode 1)
+  TMOD = (TMOD & 0xf0) | 0x01;
 
-    // Print message
-    rs232_put_char('K');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('L');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('A');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('R');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('A');
-    delay_usleep(DELAY_TIME_US);
-    rs232_put_char('\n');
-    delay_usleep(DELAY_TIME_US);
+  // Set intial timer value
+  timer_val = 0xffff - usec;
+  TH0 = timer_val >> 8;
+  TL0 = timer_val & 0x0f;
 
-    rs232_putln_string("BROLIN");
-    delay_usleep(DELAY_TIME_US);
-  }
+  TR0 = 1;       // Turn on TIMER0
+  while (!TF0) ; // Wait for TIMER0 overflow
+
+  TR0 = 0; // Turn off TIMER0
+  TF0 = 0; // Clear TIMER0 overflow flag
 }
