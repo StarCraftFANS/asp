@@ -1,0 +1,6 @@
+stty 9600 cs8 -parenb -crtscts -echo -F /dev/ttyUSB0
+stty -F /dev/ttyUSB0
+setserial -a /dev/ttyUSB0
+
+sx  < /dev/ttyUSB0 > /dev/ttyUSB0 ./file.bin
+

@@ -1,6 +1,13 @@
 ==================================================================
 21/12-2014 EMWHBR
 
+*) R1A05
+
+*) Initial version of PIC/PICSIM variant of ASP.
+
+==================================================================
+21/12-2014 EMWHBR
+
 *) R1A04
 
 *) Added information on howto install and test SDCC.
