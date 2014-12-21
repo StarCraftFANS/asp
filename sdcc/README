@@ -1,0 +1,57 @@
+GPUTILS:	gputils-1.4.0-1.tar.gz
+SDCC:		sdcc-src-3.4.0.tar.bz2
+
+OVERVIEW
+--------
+1. Prepare installation
+2. Install GPUTILS
+3. Install SDCC
+4. Test PIC
+5. Test 8051
+
+1. Prepare installation
+------------------------
+sudo mkdir -p /opt/gputils
+sudo mkdir -p /opt/sdcc
+
+sudo apt-get install flex
+sudo apt-get install bison
+sudo apt-get install libboost-all-dev
+
+2. Install GPUTILS
+------------------
+tar xvf gputils-1.4.0-1.tar.gz
+cd gputils-1.4.0-1
+
+./configure --prefix=/opt/gputils
+make
+
+sudo make install
+
+3. Install SDCC
+---------------
+tar xvf sdcc-src-3.4.0.tar.bz2
+cd sdcc-3.4.0
+
+export PATH="/opt/gputils/bin:$PATH"
+
+./configure --prefix=/opt/sdcc
+make
+
+sudo make install
+
+4. Test PIC
+-----------
+cd test_pic
+./build.sh
+
+This shall generate test.hex, 1404 bytes (ignore assembler warnings).
+
+5. Test 8051
+------------
+cd test_8051
+/opt/sdcc/bin/sdcc -mmcs51 test.c -o test.hex --out-fmt-ihx
+
+This shall generate test.hex, 730 bytes.
+
+See also instructions in test.c.
