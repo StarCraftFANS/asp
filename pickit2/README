@@ -1,0 +1,94 @@
+PICkit 2 Command Line Interface
+
+Source code:	 pk2cmdv1.20LinuxMacSource.tar.gz
+
+pk2cmd 	          v1.20
+Device File       v1.55.00 (included)
+PICkit 2 Firmware v2.32.00 (minimum required)   
+
+OVERVIEW
+--------
+1. Prepare installation
+2. Install PICkit 2 Command Line Interface
+3. Test Command Line Interface
+4. Connect PICkit 2 hardware (USB device programmer)
+5. Make normal user run pk2cmd
+6. Run pk2cmd as normal user
+
+1. Prepare installation
+------------------------
+sudo mkdir -p /opt/pickit2/
+
+sudo apt-get install libusb-dev
+
+2. Install PICkit 2 Command Line Interface
+------------------------------------------
+tar xvf pk2cmdv1.20LinuxMacSource.tar.gz 
+cd pk2cmdv1.20LinuxMacSource
+
+make linux
+
+This will generate exeutable 'p2kcmd'.
+
+sudo cp ./pk2cmd /opt/pickit2/
+sudo cp ./PK2DeviceFile.dat /opt/pickit2/
+sudo cp ./PK2V023200.hex /opt/pickit2/
+sudo chmod 644 /opt/pickit2/PK2*
+
+cd ..
+
+3. Test Command Line interface
+------------------------------
+export PATH=/opt/pickit2/:$PATH
+pk2cmd -?V
+
+This will generate the following output:
+
+Executable Version:    1.20.00
+Device File Version:   1.55.00
+OS Firmware Version:   PICkit 2 not found
+Operation Succeeded
+
+4. Connect PICkit 2 hardware
+-----------------------------
+a) Connect PICkit 2 (USB device programmer)
+b) Check kernel messages
+
+sudo dmesg
+.....
+usb 6-1: new full-speed USB device number 3 using uhci_hcd
+usb 6-1: New USB device found, idVendor=04d8, idProduct=0033
+usb 6-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+usb 6-1: Product: PICkit 2 Microcontroller Programmer
+usb 6-1: Manufacturer: Microchip Technology Inc.
+usb 6-1: SerialNumber: \xffffffd0\xffffff89\xffffff89
+
+5. Make normal user run pk2cmd
+-------------------------------
+a) Create the following text file, 98-pickit2.rules:
+
+# PICkit 2 USB device programmer
+# This file should be installed to /etc/udev/rules.d
+# so that you can access the hardware without being root
+#
+# type this at the command prompt:
+# sudo cp 98-pickit2.rules /etc/udev/rules.d
+
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="04d8", ATTR{idProduct}=="0033", MODE="0666"
+
+b) Copy file
+sudo cp 98-pickit2.rules /etc/udev/rules.d
+
+c) Disconnect and reconnect Connect PICkit 2 (USB device programmer)
+
+6. Run pk2cmd as normal user
+----------------------------
+export PATH=/opt/pickit2/:$PATH
+pk2cmd -?V
+
+This will generate the following output:
+
+Executable Version:    1.20.00
+Device File Version:   1.55.00
+OS Firmware Version:   2.32.00   <----- This line indicates that PICkit 2 was found!!!
+Operation Succeeded
