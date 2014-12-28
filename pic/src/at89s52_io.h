@@ -19,10 +19,8 @@
 /////////////////////////////////////////////////////////////////////////////
 // Return codes
 #define AT89S52_SUCCESS      0
-#define AT89S52_FILE_ERROR  -1
-#define AT89S52_SPI_ERROR   -2
-#define AT89S52_ADDR_ERROR  -3
-#define AT89S52_TIME_ERROR  -4
+#define AT89S52_SPI_ERROR   -1
+#define AT89S52_ADDR_ERROR  -2
 
 // Chip definitions
 #define AT89S52_SIGNATURE  0x001e5206

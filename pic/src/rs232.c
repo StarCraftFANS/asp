@@ -9,7 +9,23 @@
 // *                                                                      *
 // ************************************************************************
 
+#include <pic18fregs.h>
+
 #include "rs232.h"
+#include "delay.h"
+
+// Implementation notes:
+// 1. PIC18F2510 datasheet, Document: DS39636D
+//    http://www.microchip.com/
+//
+// 2. Assumes external clock, Fosc=20MHz.
+//
+// 3. Baudrate set to 9600bps, BRGH=1, BRG16=0:
+//    Baudrate = Fosc / (16 x [SPBRG + 1] )
+//
+//    Fosc  : Frequency external clock
+//    SPBRG : Baudrate Generator Register
+//
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
@@ -31,6 +47,16 @@
 
 int rs232_initialize(void)
 {
+  DDRC |= (_RC7 | _RC6);  // TRISC<7> = TRISC<6> = 1
+
+  RCSTA = _SPEN | _CREN;  // Serial port enable, Receive enable
+  TXSTA = _TXEN | _BRGH;  // Transmit enable, BRGH=1  
+
+  BAUDCON = 0;            // BRG16=0
+
+  SPBRGH = 0x00;
+  SPBRG  = 129;           // 9600bps@20MHz, BRGH=1, BRG16=0
+
   return RS232_SUCCESS;
 }
 
@@ -45,7 +71,13 @@ int rs232_finalize(void)
 
 int rs232_recv(uint8_t *data)
 {
-  return RS232_SUCCESS;
+  if (PIR1bits.RCIF) {     // Check if reception complete
+    *data = RCREG;         // Read data (clear RCIF)
+    return RS232_SUCCESS;
+  }
+  else {
+    return RS232_WOULD_BLOCK;
+  }
 }
 
 ////////////////////////////////////////////////////////////////
@@ -53,13 +85,34 @@ int rs232_recv(uint8_t *data)
 int rs232_recv_timeout(uint8_t *data,
 		       unsigned timeout_s)
 {
-  return RS232_SUCCESS;
+  int rc;
+  unsigned int timeout_cnt;
+
+  // Define timeout for receive operation
+  timeout_cnt = timeout_s * 1000; // ms
+
+  // Receive one character
+  do {
+    rc = rs232_recv(data);
+    if ( timeout_s && (rc == RS232_WOULD_BLOCK) ) {
+      delay_ms(1); // 1ms
+      timeout_cnt--;
+    }
+    else {
+      break;
+    }
+  } while (timeout_cnt);
+
+  return rc;
 }
 
 ////////////////////////////////////////////////////////////////
 
 int rs232_send(uint8_t data)
 {
+  while (!TXSTAbits.TRMT) { ; }  // Wait until TSR empty
+  TXREG = data;                  // Send data
+
   return RS232_SUCCESS;
 }
 
@@ -67,6 +120,17 @@ int rs232_send(uint8_t data)
 
 int rs232_purge_receiver(void)
 {
+  volatile uint8_t data;
+  int timeout_cnt;
+
+  timeout_cnt = 10; // 1000ms = 1s
+
+  while (timeout_cnt > 0) { 
+    data = RCREG;  // Flush any data on rx line
+    delay_ms(100); // 100ms
+    timeout_cnt--;
+  }
+
   return RS232_SUCCESS;
 }
 

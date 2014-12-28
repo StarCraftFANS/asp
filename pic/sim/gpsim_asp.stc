@@ -1,0 +1,86 @@
+# Device is PIC18F2520
+processor pic18f2520
+
+# Set the Clock frequency to 20 Mhz.
+frequency 20000000
+
+# Load module library
+module library libgpsim_modules.so
+
+#############################################
+#             USART
+#############################################
+# Load the usart module from the module library
+# and give it a name
+module load usart U1
+
+# Create nodes                                                           
+node PIC_tx
+node PIC_rx
+
+# Attach nodes to pins
+attach PIC_tx portc6 U1.RXPIN
+attach PIC_rx portc7 U1.TXPIN
+
+# Set the usart module's baud rate
+U1.txbaud=9600
+U1.rxbaud=9600
+
+#############################################
+#             LED
+#############################################
+# Load the led module from the module library
+# and give it names
+module load led ACTIV_LED
+module load led HOST_ERR_LED
+module load led TARGET_ERR_LED
+
+# Create nodes
+node PIC_activ_led
+node PIC_host_err_led
+node PIC_target_err_led
+
+# Attach nodes to pins
+attach PIC_activ_led      portb7 ACTIV_LED.in
+attach PIC_host_err_led   portb6 HOST_ERR_LED.in
+attach PIC_target_err_led portb5 TARGET_ERR_LED.in
+
+# Set led module's attribute
+ACTIV_LED.color = green
+ACTIV_LED.ActiveState = high
+
+HOST_ERR_LED.color = red
+HOST_ERR_LED.ActiveState = high
+
+TARGET_ERR_LED.color = red
+TARGET_ERR_LED.ActiveState = high
+
+#############################################
+#             TARGET RESET
+#############################################
+# Create node
+node PIC_target_reset
+
+# Attach node to pins
+attach PIC_target_reset portb4
+
+#############################################
+#             OSCILLOSCOPE
+#############################################
+# SPI clock
+scope.ch0 = "portc3"
+
+# SPI data out
+scope.ch1 = "portc5"
+
+# Target reset
+scope.ch2 = "portb4"
+
+# Activity LED
+scope.ch3 = "portb7"
+
+# Host error LED
+scope.ch4 = "portb6"
+
+# Target error LED
+scope.ch5 = "portb5"

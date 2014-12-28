@@ -9,8 +9,17 @@
 // *                                                                      *
 // ************************************************************************
 
-#include "user_io.h"
+#include "asp_hw.h"
 #include "rs232.h"
+#include "spi.h"
+#include "delay.h"
+
+// Implementation notes:
+// 1. PIC18F2510 datasheet, Document: DS39636D
+//    http://www.microchip.com/
+//
+// 2. Assumes external clock, Fosc=20MHz.
+//
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
@@ -30,44 +39,31 @@
 
 ////////////////////////////////////////////////////////////////
 
-void user_io_put(const char *msg,
-		unsigned len)
+void asp_hw_initialize(void)
 {
-  unsigned i;
+  DDRB &= ~(_RB4);                // Target reset pin 
 
-  for (i=0; i < len; i++) {
-    rs232_send((uint8_t)msg[i]);
-  }
-}
+  DDRB &= ~(_RB7 | _RB6 | _RB5);  // LED control pins
+                                  // TRISB<7> = 0 (output)
+                                  // TRISB<6> = 0 (output)
+                                  // TRISB<5> = 0 (output)
 
-////////////////////////////////////////////////////////////////
+  ACTIV_LED_OFF;                  // Turn off all LEDs
+  HOST_ERR_LED_OFF;
+  TARGET_ERR_LED_OFF;
 
-void user_io_put_line(const char *msg,
-		      unsigned len)
-{
-  user_io_put(msg, len);
-  user_io_new_line();
-}
+  rs232_initialize();             // Initialize RS232
+  spi_initialize(SPI_MODE_0);     // Initialize SPI, mode (0,0)
 
-////////////////////////////////////////////////////////////////
-
-void user_io_new_line(void)
-{
-  rs232_send(10);
-  rs232_send(13);
-}
-
-////////////////////////////////////////////////////////////////
-
-int user_io_get(uint8_t *data)
-{
-  int rc;
-
-  rc = rs232_recv(data);
-  if (rc != RS232_SUCCESS) {
-    return USER_IO_FAILURE;
-  }
-  return USER_IO_SUCCESS;
+  ACTIV_LED_ON;                   // Signal alive
+  delay_ms(300);
+  ACTIV_LED_OFF;
+  HOST_ERR_LED_ON;
+  delay_ms(300);
+  HOST_ERR_LED_OFF;
+  TARGET_ERR_LED_ON;
+  delay_ms(300);
+  TARGET_ERR_LED_OFF;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,4 +71,3 @@ int user_io_get(uint8_t *data)
 /////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////
-

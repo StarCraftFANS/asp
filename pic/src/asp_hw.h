@@ -9,19 +9,35 @@
 // *                                                                      *
 // ************************************************************************
 
-#ifndef __DELAY_H__
-#define __DELAY_H__
+#ifndef __ASP_HW_H__
+#define __ASP_HW_H__
 
-#include <stdint.h>
+#include <pic18fregs.h>
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
+// Target RESET pin
+#define TARGET_RESET_PIN  PORTBbits.RB4
+
+// LED I/O pins
+#define ACTIV_LED_PIN       PORTBbits.RB7
+#define HOST_ERR_LED_PIN    PORTBbits.RB6
+#define TARGET_ERR_LED_PIN  PORTBbits.RB5
+
+// LED on/off
+#define ACTIV_LED_ON   (ACTIV_LED_PIN = 1)
+#define ACTIV_LED_OFF  (ACTIV_LED_PIN = 0)
+
+#define HOST_ERR_LED_ON   (HOST_ERR_LED_PIN = 1) 
+#define HOST_ERR_LED_OFF  (HOST_ERR_LED_PIN = 0)
+
+#define TARGET_ERR_LED_ON   (TARGET_ERR_LED_PIN = 1)
+#define TARGET_ERR_LED_OFF  (TARGET_ERR_LED_PIN = 0)
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of exported functions
 /////////////////////////////////////////////////////////////////////////////
-extern void delay_ms(uint16_t msec);
-extern void delay_s(uint16_t sec);
+extern void asp_hw_initialize(void);
 
-#endif // __DELAY_H__
+#endif // __ASP_HW_H__

@@ -10,28 +10,27 @@
 #  *                                                                      *
 #  ************************************************************************/
 
-### Setup build environment
-source ./setup_environment.sh
+### Setup environment
+source ../setup_environment.sh
 
-### Build
-case "$1" in
-    clean)
-        echo "==[MAKE CLEAN]==="
-        make clean
-        ;;
+BUILD_DIR="../obj"
+RUN_DIR="./gpsim_run_dir"
 
-    mcu)
-        echo "==[MAKE MCU]==="
-        make BUILD_TYPE=MCU all
-        ;;
+### Check that simulation is possible
+if [ ! -e ${BUILD_DIR}/pic_asp.cod ]
+then
+    echo "*** ERROR : No build files found"
+    exit 1
+fi
 
-    sim)
-        echo "==[MAKE SIM]==="
-        make BUILD_TYPE=SIM all
-        ;;
+### Clean any previous simulation
+\rm -rf ${RUN_DIR}
 
-    *)
-        echo "Usage $0 {clean|mcu|sim}"
-        exit 1
-        ;;
-esac
+### Prepare simulation
+mkdir -pv ${RUN_DIR}/obj
+cp ${BUILD_DIR}/pic_asp{.cod,.cof,.dasm,.hex,.lst,.map} ${RUN_DIR}
+cp ${BUILD_DIR}/*.asm ${RUN_DIR}/obj/
+
+### Run simulation
+cd ${RUN_DIR}
+gpsim -s pic_asp.cod -c ../gpsim_asp.stc

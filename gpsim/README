@@ -1,0 +1,60 @@
+GPSIM with GUI
+
+gpsim	     gpsim-0.28.1.tar.gz
+gtk+extra    gtk+extra-2.1.2.tar.gz
+
+OVERVIEW
+--------
+1. Prepare installation
+2. Install gtk+extra
+3. Install gpsim
+4. Start gpsim
+
+1. Prepare installation
+------------------------
+sudo mkdir -p /opt/gtk+extra-2.1.2
+sudo mkdir -p /opt/gpsim/
+
+Needed by gtk+extra:
+sudo apt-get install libgtk2.0-dev
+
+Needed by gpsim
+sudo apt-get install libpopt-dev
+sudo apt-get install libreadline-dev
+
+2. Install gtk+-extra
+----------------------
+Note!
+- File gtkitementry.c needs to be replaced, see copy operation below.
+
+tar xvf gtk+extra-2.1.2.tar.gz
+cp gtkitementry.c gtk+extra-2.1.2/gtkextra/gtkitementry.c
+
+cd gtk+extra-2.1.2
+./configure --prefix=/opt/gtk+extra-2.1.2
+make
+sudo make install
+
+3. Install gpsim
+----------------
+Note!
+- File configure needs to be replaced, see copy operation below.
+- Tools from GPUTILS are required during make.
+
+tar xvf gpsim-0.28.1.tar.gz
+cp configure_gpsim gpsim-0.28.1/configure
+ 
+cd gpsim-0.28.1
+./configure --prefix=/opt/gpsim
+export PATH=/opt/gputils/bin/:$PATH
+make
+sudo make install
+
+4. Start gpsim
+--------------
+/opt/gpsim/bin/gpsim
+
+This should start the GUI and command prompt.
+
+**gpsim> version
+Release 0.28.1

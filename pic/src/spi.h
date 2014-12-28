@@ -9,19 +9,33 @@
 // *                                                                      *
 // ************************************************************************
 
-#ifndef __DELAY_H__
-#define __DELAY_H__
+#ifndef __SPI_H__
+#define __SPI_H__
 
 #include <stdint.h>
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
+// Return codes
+#define SPI_SUCCESS       0
+#define SPI_FAILURE      -1
+
+/////////////////////////////////////////////////////////////////////////////
+//               Definition of types
+/////////////////////////////////////////////////////////////////////////////
+typedef enum {SPI_MODE_0,
+	      SPI_MODE_1,
+	      SPI_MODE_2,
+	      SPI_MODE_3} SPI_MODE;
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of exported functions
 /////////////////////////////////////////////////////////////////////////////
-extern void delay_ms(uint16_t msec);
-extern void delay_s(uint16_t sec);
+extern int spi_initialize(SPI_MODE mode);
 
-#endif // __DELAY_H__
+extern int spi_xfer(const uint8_t *tx_buf,
+		    uint8_t *rx_buf,
+		    uint16_t nbytes);
+
+#endif // __SPI_H__

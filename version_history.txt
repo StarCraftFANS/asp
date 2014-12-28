@@ -1,4 +1,18 @@
 ==================================================================
+28/12-2014 EMWHBR
+
+*) R1A07
+
+*) Added information on howto install and test GPSIM.
+
+*) PIC variant of ASP (R1A02):
+   - Added support for simulation using GPSIM.
+   - Defined configuration bits using #pragma.
+   - Target reset control.
+   - LED control for activity, host- and target errors.
+   - Implemented functionality for RS232, SPI and delay.
+
+==================================================================
 21/12-2014 EMWHBR
 
 *) R1A06
@@ -10,7 +24,7 @@
 
 *) R1A05
 
-*) Initial version of PIC/PICSIM variant of ASP.
+*) Initial version of PIC/PICSIM(x86_64) variant of ASP (R1A01).
 
 ==================================================================
 21/12-2014 EMWHBR

@@ -21,7 +21,14 @@ endif
 
 # ----- Target setup
 
-PIC_PROC = 18f2510
+# GPSIM doesn't support actual target PIC18F2510.
+# We pick the closest avilable target for simulation.
+ifeq "$(BUILD_TYPE)" "SIM"
+	PIC_PROC = 18f2520
+else 
+	PIC_PROC = 18f2510
+endif
+
 PIC_TYPE = pic16
 
 # ----- Toolchain setup
@@ -35,27 +42,32 @@ DAS     = gpdasm
 
 OBJ_DIR = ./obj
 SRC_DIR = ./src
+SIM_DIR = ./sim
 
 APP = pic_asp
 
 APP_ASMS = $(OBJ_DIR)/main.asm \
+           $(OBJ_DIR)/asp_hw.asm \
            $(OBJ_DIR)/asp.asm \
            $(OBJ_DIR)/asp_ui.asm \
            $(OBJ_DIR)/at89s52_io.asm \
            $(OBJ_DIR)/at89s52_isp.asm \
            $(OBJ_DIR)/delay.asm \
            $(OBJ_DIR)/rs232.asm \
+           $(OBJ_DIR)/spi.asm \
            $(OBJ_DIR)/user_io.asm \
            $(OBJ_DIR)/utility.asm \
            $(OBJ_DIR)/xmodem.asm
 
 APP_OBJS = $(OBJ_DIR)/main.o \
+           $(OBJ_DIR)/asp_hw.o \
            $(OBJ_DIR)/asp.o \
            $(OBJ_DIR)/asp_ui.o \
            $(OBJ_DIR)/at89s52_io.o \
            $(OBJ_DIR)/at89s52_isp.o \
            $(OBJ_DIR)/delay.o \
            $(OBJ_DIR)/rs232.o \
+           $(OBJ_DIR)/spi.o \
            $(OBJ_DIR)/user_io.o \
            $(OBJ_DIR)/utility.o \
            $(OBJ_DIR)/xmodem.o
@@ -127,6 +139,8 @@ clean :
 	rm -f $(OBJ_DIR)/*.dasm
 	rm -f $(SRC_DIR)/*~
 	rm -rf *~
+	rm -rf $(SIM_DIR)/*~
+	rm -rf $(SIM_DIR)/gpsim_run_dir
 help:
 	@echo "Usage: make clean"
 	@echo "       make asm"

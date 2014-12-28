@@ -17,3 +17,7 @@ export PATH=$SDCC_HOME/bin:$PATH
 # GPUTILS
 export GPUTILS_HOME=/opt/gputils
 export PATH=$GPUTILS_HOME/bin:$PATH
+
+# GPSIM
+export GPSIM_HOME=/opt/gpsim
+export PATH=$GPSIM_HOME/bin:$PATH
