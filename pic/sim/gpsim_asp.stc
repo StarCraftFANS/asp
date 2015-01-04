@@ -31,21 +31,27 @@ U1.rxbaud=9600
 #############################################
 # Load the led module from the module library
 # and give it names
+module load led DBG_LED
 module load led ACTIV_LED
 module load led HOST_ERR_LED
 module load led TARGET_ERR_LED
 
 # Create nodes
+node PIC_dbg_led
 node PIC_activ_led
 node PIC_host_err_led
 node PIC_target_err_led
 
 # Attach nodes to pins
-attach PIC_activ_led      portb7 ACTIV_LED.in
-attach PIC_host_err_led   portb6 HOST_ERR_LED.in
-attach PIC_target_err_led portb5 TARGET_ERR_LED.in
+attach PIC_dbg_led        porta0 DBG_LED.in
+attach PIC_activ_led      porta1 ACTIV_LED.in
+attach PIC_host_err_led   porta2 HOST_ERR_LED.in
+attach PIC_target_err_led porta3 TARGET_ERR_LED.in
 
-# Set led module's attribute
+# Set led module's attributes
+DBG_LED.color = green
+DBG_LED.ActiveState = high
+
 ACTIV_LED.color = green
 ACTIV_LED.ActiveState = high
 
@@ -61,8 +67,21 @@ TARGET_ERR_LED.ActiveState = high
 # Create node
 node PIC_target_reset
 
-# Attach node to pins
-attach PIC_target_reset portb4
+# Attach node to pin
+attach PIC_target_reset portc2
+
+#############################################
+#             BUTTON
+#############################################
+# Load the button module from the module library
+# and give it a name
+module load push_button BUTTON
+
+# Create node
+node PIC_button
+
+# Attach node to pin
+attach PIC_button porta5 BUTTON.out
 
 #############################################
 #             OSCILLOSCOPE
@@ -74,13 +93,19 @@ scope.ch0 = "portc3"
 scope.ch1 = "portc5"
 
 # Target reset
-scope.ch2 = "portb4"
+scope.ch2 = "portc2"
+
+# Debug LED
+scope.ch3 = "porta0"
 
 # Activity LED
-scope.ch3 = "portb7"
+scope.ch4 = "porta1"
 
 # Host error LED
-scope.ch4 = "portb6"
+scope.ch5 = "porta2"
 
 # Target error LED
-scope.ch5 = "portb5"
+scope.ch6 = "porta3"
+
+# Button
+scope.ch7 = "porta5"

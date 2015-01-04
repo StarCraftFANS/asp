@@ -46,6 +46,31 @@
 
 ////////////////////////////////////////////////////////////////
 
+void delay_100us(uint16_t n)
+{
+  T0CONbits.TMR0ON = 0;  // Stop Timer0
+  INTCONbits.TMR0IF = 0; // Clear any interrupt
+
+  // Each loop is 100us delay:
+  // 250 x ( 1/Fosc x 4 x 2 )
+  while (n) {
+    TMR0 = 6;           // 256-6=250
+    T0CON = 0b11000000; // TMR0ON = 1 (Start timer)
+                        // T08BIT = 1 (8-bit timer)
+                        // T0CS   = 0 (Internal instruction cycle)
+                        // PSA    = 0 (Prescaler assigned)
+                        // Prescaler = 1:2
+
+    while (!INTCONbits.TMR0IF) { ; } // Wait for interrupt
+    INTCONbits.TMR0IF = 0;           // Clear interrupt
+    
+    n--;
+  }
+
+}
+
+////////////////////////////////////////////////////////////////
+
 void delay_ms(uint16_t msec)
 {
   T0CONbits.TMR0ON = 0;  // Stop Timer0

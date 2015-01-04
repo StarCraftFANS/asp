@@ -17,15 +17,22 @@
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
+// Button pin
+#define BUT_PIN  PORTAbits.RA5
+
 // Target RESET pin
-#define TARGET_RESET_PIN  PORTBbits.RB4
+#define TARGET_RESET_PIN  PORTCbits.RC2
 
 // LED I/O pins
-#define ACTIV_LED_PIN       PORTBbits.RB7
-#define HOST_ERR_LED_PIN    PORTBbits.RB6
-#define TARGET_ERR_LED_PIN  PORTBbits.RB5
+#define DBG_LED_PIN         PORTAbits.RA0
+#define ACTIV_LED_PIN       PORTAbits.RA1
+#define HOST_ERR_LED_PIN    PORTAbits.RA2
+#define TARGET_ERR_LED_PIN  PORTAbits.RA3
 
 // LED on/off
+#define DBG_LED_ON   (DBG_LED_PIN = 1)
+#define DBG_LED_OFF  (DBG_LED_PIN = 0)
+
 #define ACTIV_LED_ON   (ACTIV_LED_PIN = 1)
 #define ACTIV_LED_OFF  (ACTIV_LED_PIN = 0)
 

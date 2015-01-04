@@ -41,21 +41,43 @@
 
 void asp_hw_initialize(void)
 {
-  DDRB &= ~(_RB4);                // Target reset pin 
+  // Special handling needed when using PORTA for digital I/O
+  PORTA = 0;                      // Clear output data latches
 
-  DDRB &= ~(_RB7 | _RB6 | _RB5);  // LED control pins
-                                  // TRISB<7> = 0 (output)
-                                  // TRISB<6> = 0 (output)
-                                  // TRISB<5> = 0 (output)
+  CMCON = 0x7;                    // Turn off comparators
 
-  ACTIV_LED_OFF;                  // Turn off all LEDs
+  ADCON0bits.ADON = 0;            // Disable A/D converter
+  ADCON1 |= 0b00001111;           // Configure pins for digital I/O
+                                  // PCFG3:0 = 1111
+
+  // Define direction for port pins
+  DDRA |= (_RA5);                 // Button input pin
+                                  // TRISA<5> = 1 (input)
+
+  DDRA &= ~(_RA3 | _RA2 | _RA1);  // LED control pins
+                                  // TRISA<3> = 0 (output)
+                                  // TRISA<2> = 0 (output)
+                                  // TRISA<1> = 0 (output)
+
+  DDRA &= ~(_RA0);                // Debug LED control pin
+                                  // TRISA<0> = 0 (output)
+
+  DDRC &= ~(_RC2);                // Target reset pin
+                                  // TRISC<2> = 0 (output)
+
+  // Initialization sequence
+  DBG_LED_OFF;                    // Turn off all LEDs
+  ACTIV_LED_OFF;
   HOST_ERR_LED_OFF;
   TARGET_ERR_LED_OFF;
 
   rs232_initialize();             // Initialize RS232
   spi_initialize(SPI_MODE_0);     // Initialize SPI, mode (0,0)
 
-  ACTIV_LED_ON;                   // Signal alive
+  DBG_LED_ON;                     // Signal alive
+  delay_ms(300);
+  DBG_LED_OFF;
+  ACTIV_LED_ON;
   delay_ms(300);
   ACTIV_LED_OFF;
   HOST_ERR_LED_ON;

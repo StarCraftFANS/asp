@@ -51,6 +51,7 @@ static uint16_t xmodem_crc_update(uint16_t crc,
 /////////////////////////////////////////////////////////////////////////////
 //               Global variables
 /////////////////////////////////////////////////////////////////////////////
+XMODEM_PACKET g_xpack;
 
 /////////////////////////////////////////////////////////////////////////////
 //               Public functions
@@ -67,7 +68,6 @@ int xmodem_recv_file(XMODEM_PACKET_CALLBACK packet_callback,
   int timeout_s;
   int use_crc = 0;
   uint8_t packet_seq = 1;
-  XMODEM_PACKET xpack;
 
   // Check flags
   if (flags & XMODEM_FLAG_CRC) {
@@ -96,20 +96,27 @@ int xmodem_recv_file(XMODEM_PACKET_CALLBACK packet_callback,
 		     timeout_s,
 		     use_crc,
 		     packet_seq,
-		     &xpack);
+		     &g_xpack);
     if (rc == XMODEM_SUCCESS) {
       if (packet_callback) {
-	if (packet_callback(&xpack) != 0) {
+	if (packet_callback(&g_xpack) != 0) {
 	  xmodem_cancel_transfer(); // Callback failed, cancel transfer
 	  rc = XMODEM_CALLBACK_ERROR;
 	  handle_packets = 0;
 	}
+	else {
+	  xmodem_send_ctrl(XMODEM_CTRL_ACK); // Callback OK
+        }
+      }
+      else {
+	xmodem_send_ctrl(XMODEM_CTRL_ACK); // No callback
       }
       timeout_s = 1; // Switch to 1s timeout once a packet is received
       retries = 10;  // Switch to 10 retries once a packet is received
       packet_seq++;
     }
     else if (rc == XMODEM_END_OF_TRANSFER) {
+      xmodem_send_ctrl(XMODEM_CTRL_ACK);
       rc = XMODEM_SUCCESS;
       handle_packets = 0;
     }
@@ -182,7 +189,6 @@ static int xmodem_recv(int retries,
     rc = xmodem_do_recv(timeout_s, use_crc, expected_seq, xpack);
     if ( (rc == XMODEM_SUCCESS) ||
 	 (rc == XMODEM_END_OF_TRANSFER) ) {
-      xmodem_send_ctrl(XMODEM_CTRL_ACK);
       break;
     }
     else {

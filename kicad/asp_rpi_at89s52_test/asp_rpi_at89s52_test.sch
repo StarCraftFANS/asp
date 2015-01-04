@@ -38,8 +38,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
 Title "ASP (Raspberry Pi) - AT89S52 programming and test"
-Date "9 nov 2014"
-Rev "PA1"
+Date "28 dec 2014"
+Rev "PA2"
 Comp "Bonden i Nol AB"
 Comment1 ""
 Comment2 ""
@@ -523,10 +523,10 @@ F 3 "~" H 9600 4650 30  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED D?
+L LED D1
 U 1 1 5455F212
 P 9600 5200
-F 0 "D?" H 9600 5300 50  0000 C CNN
+F 0 "D1" H 9600 5300 50  0000 C CNN
 F 1 "LED" H 9600 5100 50  0000 C CNN
 F 2 "~" H 9600 5200 60  0000 C CNN
 F 3 "~" H 9600 5200 60  0000 C CNN

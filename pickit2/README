@@ -14,6 +14,7 @@ OVERVIEW
 4. Connect PICkit 2 hardware (USB device programmer)
 5. Make normal user run pk2cmd
 6. Run pk2cmd as normal user
+7. Command examples
 
 1. Prepare installation
 ------------------------
@@ -92,3 +93,23 @@ Executable Version:    1.20.00
 Device File Version:   1.55.00
 OS Firmware Version:   2.32.00   <----- This line indicates that PICkit 2 was found!!!
 Operation Succeeded
+
+7. Command examples
+-------------------
+Probe device:
+pk2cmd /P
+
+Program device:
+pk2cmd /PPIC18F2510 /F../pic/obj/pic_asp.hex /M
+
+Read device:
+pk2cmd /PPIC18F2510 /GFtarget.hex
+
+Read device config:    
+pk2cmd /PPIC18F2510 /GC
+
+Power device and reset:
+pk2cmd /PPIC18F2510 /T /R
+
+Reset device:
+pk2cmd /PPIC18F2510 /R

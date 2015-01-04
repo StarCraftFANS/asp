@@ -76,6 +76,10 @@ int rs232_recv(uint8_t *data)
     return RS232_SUCCESS;
   }
   else {
+    if (RCSTAbits.OERR) {    // Check if overrun error
+        RCSTAbits.CREN = 0;  // Clear error
+        RCSTAbits.CREN = 1;
+    }
     return RS232_WOULD_BLOCK;
   }
 }
@@ -86,16 +90,16 @@ int rs232_recv_timeout(uint8_t *data,
 		       unsigned timeout_s)
 {
   int rc;
-  unsigned int timeout_cnt;
+  uint32_t timeout_cnt;
 
   // Define timeout for receive operation
-  timeout_cnt = timeout_s * 1000; // ms
+  timeout_cnt = (uint32_t)timeout_s * (uint32_t)10000; // 100us
 
   // Receive one character
   do {
     rc = rs232_recv(data);
     if ( timeout_s && (rc == RS232_WOULD_BLOCK) ) {
-      delay_ms(1); // 1ms
+      delay_100us(1); // 100us
       timeout_cnt--;
     }
     else {
@@ -123,12 +127,18 @@ int rs232_purge_receiver(void)
   volatile uint8_t data;
   int timeout_cnt;
 
+
   timeout_cnt = 10; // 1000ms = 1s
 
   while (timeout_cnt > 0) { 
     data = RCREG;  // Flush any data on rx line
     delay_ms(100); // 100ms
     timeout_cnt--;
+  }
+
+  if (RCSTAbits.OERR) {  // Check if overrun error
+    RCSTAbits.CREN = 0;  // Clear error
+    RCSTAbits.CREN = 1;
   }
 
   return RS232_SUCCESS;

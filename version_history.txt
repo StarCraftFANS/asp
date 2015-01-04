@@ -1,4 +1,24 @@
 ==================================================================
+4/1-2015 EMWHBR
+
+*) R1A08
+
+*) Added command examples for PICkit2.
+
+*) Updated Kicad schematics.
+
+*) PIC variant of ASP (R1A03):
+   - Changed handling of commands.
+   - Fixed bug in RS232 receive functions when overflow.
+   - Fixed bug in Xmodem protocol when receiving data.
+     Packets are not acked until callback has finished.
+   - Added new delay function, delay_100us.
+   - Added support for debug pin and LED (RA0).
+   - Added support for button pin (RA5).
+   - Changed target reset pin from RB4 to RC2.
+   - Changed LED I/O pins from portB to portA
+
+==================================================================
 28/12-2014 EMWHBR
 
 *) R1A07
