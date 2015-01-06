@@ -9,31 +9,40 @@
 // *                                                                      *
 // ************************************************************************
 
-#include "asp_hw.h"
-#include "asp_ui.h"
+#ifndef __ASP_HW_H__
+#define __ASP_HW_H__
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
+// Button pin
+#define BUT_PIN
+
+// Target RESET pin
+#define TARGET_RESET_PIN
+
+// LED I/O pins
+#define DBG_LED_PIN
+#define ACTIV_LED_PIN
+#define HOST_ERR_LED_PIN
+#define TARGET_ERR_LED_PIN
+
+// LED on/off
+#define DBG_LED_ON
+#define DBG_LED_OFF
+
+#define ACTIV_LED_ON
+#define ACTIV_LED_OFF
+
+#define HOST_ERR_LED_ON
+#define HOST_ERR_LED_OFF
+
+#define TARGET_ERR_LED_ON
+#define TARGET_ERR_LED_OFF
 
 /////////////////////////////////////////////////////////////////////////////
-//               Definition of types
+//               Definition of exported functions
 /////////////////////////////////////////////////////////////////////////////
+extern void asp_hw_initialize(void);
 
-/////////////////////////////////////////////////////////////////////////////
-//               Function prototypes
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-//               Global variables
-/////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////
-
-int main(void)
-{
-  asp_hw_initialize();  // Initalize hardware
-  asp_ui_execute();     // Execute ASP
-
-  return 0;
-}
+#endif // __ASP_HW_H__

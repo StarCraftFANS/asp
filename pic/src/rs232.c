@@ -122,6 +122,23 @@ int rs232_send(uint8_t data)
 
 ////////////////////////////////////////////////////////////////
 
+int rs232_send_bytes(const uint8_t *data,
+		     uint8_t nbytes)
+{
+  int rc;
+  uint8_t i;
+
+  for (i=0; i < nbytes; i++) {
+    rc = rs232_send(data[i]);
+    if (rc != RS232_SUCCESS) {
+      return rc;
+    }
+  }
+  return RS232_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
 int rs232_purge_receiver(void)
 {
   volatile uint8_t data;

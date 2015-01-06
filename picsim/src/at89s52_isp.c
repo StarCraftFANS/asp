@@ -23,6 +23,9 @@
 #define XMODEM_RECV_FLAGS  (XMODEM_FLAG_CRC)
 //#define XMODEM_RECV_FLAGS 0
 
+#define XMODEM_SEND_FLAGS  (XMODEM_FLAG_CRC)
+//#define XMODEM_SEND_FLAGS 0
+
 /////////////////////////////////////////////////////////////////////////////
 //               Function prototypes
 /////////////////////////////////////////////////////////////////////////////
@@ -35,8 +38,9 @@ static int isp_write_bin(void);
 static int isp_verify_bin(void);
 
 // Callback functions
-static int cb_write_xmodem_data(const XMODEM_PACKET *xpack);
-static int cb_verify_xmodem_data(const XMODEM_PACKET *xpack);
+static int cb_xmodem_read_data(XMODEM_PACKET *xpack);
+static int cb_xmodem_write_data(const XMODEM_PACKET *xpack);
+static int cb_xmodem_verify_data(const XMODEM_PACKET *xpack);
 
 static void print_xmodem_packet(const XMODEM_PACKET *xpack);
 
@@ -191,6 +195,21 @@ static int isp_erase(void)
 
 static int isp_read_bin(void)
 {
+  int rc;
+
+  user_io_new_line();
+  user_io_put_line("XMODEM recv now", 15);
+
+  // Send a file, let callback handle each packet
+  // and read packet data from flash.
+  g_chip_addr = 0;
+  rc = xmodem_send_file(cb_xmodem_read_data,
+			AT89S52_FLASH_MEMORY_SIZE / XMODEM_PACKET_DATA_BYTES,
+			XMODEM_SEND_FLAGS);
+  if (rc != XMODEM_SUCCESS) {
+    return AT89S52_ISP_FAILURE;
+  }
+
   return AT89S52_ISP_SUCCESS;
 }
 
@@ -206,7 +225,7 @@ static int isp_write_bin(void)
   // Receive a file, let callback handle each packet
   // and write packet data to flash.
   g_chip_addr = 0;
-  rc = xmodem_recv_file(cb_write_xmodem_data,
+  rc = xmodem_recv_file(cb_xmodem_write_data,
 			XMODEM_RECV_FLAGS);
   if (rc != XMODEM_SUCCESS) {
     return AT89S52_ISP_FAILURE;
@@ -227,7 +246,7 @@ static int isp_verify_bin(void)
   // Receive a file, let callback handle each packet
   // and compare packet data with data read from flash.
   g_chip_addr = 0;
-  rc = xmodem_recv_file(cb_verify_xmodem_data,
+  rc = xmodem_recv_file(cb_xmodem_verify_data,
 			XMODEM_RECV_FLAGS);
   if (rc != XMODEM_SUCCESS) {
     return AT89S52_ISP_FAILURE;
@@ -238,7 +257,28 @@ static int isp_verify_bin(void)
 
 ////////////////////////////////////////////////////////////////
 
-static int cb_write_xmodem_data(const XMODEM_PACKET *xpack)
+static int cb_xmodem_read_data(XMODEM_PACKET *xpack)
+{
+  int rc;
+
+  // Read packet data from chip
+  rc = at89s52_io_read_flash(g_chip_addr,
+			     xpack->data,
+			     XMODEM_PACKET_DATA_BYTES);
+  if (rc != AT89S52_SUCCESS) {    
+    return 1;
+  }
+
+  g_chip_addr += XMODEM_PACKET_DATA_BYTES; // Next chip address
+
+  print_xmodem_packet(xpack);
+
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////
+
+static int cb_xmodem_write_data(const XMODEM_PACKET *xpack)
 {
   int rc;
 
@@ -259,7 +299,7 @@ static int cb_write_xmodem_data(const XMODEM_PACKET *xpack)
 
 ////////////////////////////////////////////////////////////////
 
-static int cb_verify_xmodem_data(const XMODEM_PACKET *xpack)
+static int cb_xmodem_verify_data(const XMODEM_PACKET *xpack)
 {
   int rc;
 

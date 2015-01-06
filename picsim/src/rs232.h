@@ -33,6 +33,8 @@ extern int rs232_recv_timeout(uint8_t *data,
 			      unsigned timeout_s);
 
 extern int rs232_send(uint8_t data);
+extern int rs232_send_bytes(const uint8_t *data,
+			    uint8_t nbytes);
 
 extern int rs232_purge_receiver(void);
 

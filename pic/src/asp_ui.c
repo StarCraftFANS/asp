@@ -68,7 +68,7 @@ void asp_ui_execute(void)
 
   do {
     print_menu();   
-    user_io_put("ASP-R1A03>", 10);
+    user_io_put("ASP-R1A04>", 10);
 
     // Wait for command
     do {

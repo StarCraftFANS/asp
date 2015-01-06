@@ -4,3 +4,4 @@ setserial -a /dev/ttyUSB0
 
 sx  < /dev/ttyUSB0 > /dev/ttyUSB0 ./file.bin
 
+picocom --send-cmd "sx -vvv" --receive-cmd "rx -vvv" -b 9600 /dev/ttyUSB1

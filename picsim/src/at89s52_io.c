@@ -86,6 +86,9 @@ int at89s52_io_read_flash(uint16_t addr,
 			  uint8_t *data,
 			  uint16_t nbytes)
 {
+  for (int i=0; i < nbytes; i++) {
+    data[i] = i;
+  }
   printf("at89s52_io_read_flash: 0x%04x:0x%02x:%u\n",
 	 addr, *data, nbytes);
   return AT89S52_SUCCESS;

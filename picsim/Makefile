@@ -37,6 +37,7 @@ APP_OBJS = $(OBJ_DIR)/rs232.o \
            $(OBJ_DIR)/at89s52_io.o \
            $(OBJ_DIR)/at89s52_isp.o \
            $(OBJ_DIR)/asp_ui.o \
+           $(OBJ_DIR)/asp_hw.o \
            $(OBJ_DIR)/asp.o \
            $(OBJ_DIR)/picsim_main.o
 

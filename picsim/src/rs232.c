@@ -65,7 +65,7 @@ static char comports[MAX_NUMBER_OF_COMPORTS][16] =
    "/dev/ttyUSB4"
   };
 
-static const int g_comport_nr = 7;            // /dev/ttyUSB2
+static const int g_comport_nr = 0;            // /dev/ttyS0
 static const int g_baudrate = 9600;           // 9600 bit/s
 static const char g_mode[] = {'8','N','1',0}; // 8-N_1
 
@@ -147,6 +147,23 @@ int rs232_send(uint8_t data)
   if (rs232_send_byte(g_comport_nr,
 		      (unsigned char)data)) {
     return RS232_FAILURE;
+  }
+  return RS232_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+int rs232_send_bytes(const uint8_t *data,
+		     uint8_t nbytes)
+{
+  int rc;
+  uint8_t i;
+
+  for (i=0; i < nbytes; i++) {
+    rc = rs232_send(data[i]);
+    if (rc != RS232_SUCCESS) {
+      return rc;
+    }
   }
   return RS232_SUCCESS;
 }

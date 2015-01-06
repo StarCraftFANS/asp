@@ -22,8 +22,9 @@
 #define XMODEM_MEDIA_ERROR      -1
 #define XMODEM_TIMEOUT          -2
 #define XMODEM_END_OF_TRANSFER  -3
-#define XMODEM_BAD_PACKET       -4
-#define XMODEM_CALLBACK_ERROR   -5
+#define XMODEM_PEER_CANCEL      -4
+#define XMODEM_BAD_PACKET       -5
+#define XMODEM_CALLBACK_ERROR   -6
 
 // Xmodem control ASCII characters
 #define XMODEM_CTRL_SOH  0x01  // Start Of Header
@@ -52,12 +53,17 @@ typedef struct {
 
 // Calling convention assumed on callback function:
 // Returns 0 on success, otherwise 1.
-typedef int (*XMODEM_PACKET_CALLBACK)(const XMODEM_PACKET *xpack);
+typedef int (*XMODEM_PACKET_CALLBACK_SEND)(XMODEM_PACKET *xpack);
+typedef int (*XMODEM_PACKET_CALLBACK_RECV)(const XMODEM_PACKET *xpack);
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of exported functions
 /////////////////////////////////////////////////////////////////////////////
-extern int xmodem_recv_file(XMODEM_PACKET_CALLBACK packet_callback,
+extern int xmodem_send_file(XMODEM_PACKET_CALLBACK_SEND packet_callback,
+			    uint16_t packets,
+			    int flags);
+
+extern int xmodem_recv_file(XMODEM_PACKET_CALLBACK_RECV packet_callback,
 			    int flags);
 
 #endif // __XMODEM_H__
