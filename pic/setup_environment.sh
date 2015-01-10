@@ -10,6 +10,10 @@
 #  *                                                                      *
 #  ************************************************************************/
 
+# Microchip XC8 toolchain
+export XC8_HOME=/opt/microchip/xc8/v1.33
+export PATH=$XC8_HOME/bin:$PATH
+
 # SDCC toolchain
 export SDCC_HOME=/opt/sdcc
 export PATH=$SDCC_HOME/bin:$PATH

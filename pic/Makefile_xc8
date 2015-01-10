@@ -1,0 +1,121 @@
+# /***********************************************************************
+# *                                                                      *
+# * Copyright (C) 2015 Bonden i Nol (hakanbrolin@hotmail.com)            *
+# *                                                                      *
+# * This program is free software; you can redistribute it and/or modify *
+# * it under the terms of the GNU General Public License as published by *
+# * the Free Software Foundation; either version 2 of the License, or    *
+# * (at your option) any later version.                                  *
+# *                                                                      *
+# ************************************************************************/
+
+# ----- Check that environment is defined 
+
+ifndef XC8_HOME
+$(error XC8_HOME not set)
+endif
+
+ifndef GPUTILS_HOME
+$(error GPUTILS_HOME not set)
+endif
+
+# ----- Target setup
+
+PIC_PROC = 18f2510
+
+ifeq "$(BUILD_TYPE)" "DBG"
+	DEBUGGER_VAL = pickit2
+	ROM_RANGES_VAL = default,-7dc0-7fff
+	RAM_RANGES_VAL = default,-5f4-5ff,-fdb-fdf,-fe3-fe7,-feb-fef,-fd4-fd4,-ffd-fff
+else 
+	DEBUGGER_VAL = none
+	ROM_RANGES_VAL = default
+	RAM_RANGES_VAL = default
+endif
+
+# ----- Toolchain setup
+
+CC      = xc8
+LD      = xc8
+DAS     = gpdasm
+
+# ----- Naive setup
+
+OBJ_DIR = ./obj
+SRC_DIR = ./src
+
+APP = pic_asp_xc8
+
+APP_OBJS = $(OBJ_DIR)/main.p1 \
+           $(OBJ_DIR)/asp_hw.p1 \
+           $(OBJ_DIR)/asp.p1 \
+           $(OBJ_DIR)/asp_ui.p1 \
+           $(OBJ_DIR)/at89s52_io.p1 \
+           $(OBJ_DIR)/at89s52_isp.p1 \
+           $(OBJ_DIR)/delay.p1 \
+           $(OBJ_DIR)/rs232.p1 \
+           $(OBJ_DIR)/spi.p1 \
+           $(OBJ_DIR)/user_io.p1 \
+           $(OBJ_DIR)/utility.p1 \
+           $(OBJ_DIR)/xmodem.p1
+
+APP_HEX  = $(OBJ_DIR)/$(APP).hex
+APP_DASM = $(OBJ_DIR)/$(APP).dasm
+
+# ----- Compiler flags
+
+CFLAGS = --pass1 --chip=$(PIC_PROC) -q \
+         --opt=all --mode=free \
+	 --debugger=$(DEBUGGER_VAL) \
+         --runtime=default --outdir=$(OBJ_DIR) --objdir=$(OBJ_DIR)
+
+# ----- Includes
+
+INCLUDES  = -I$(SRC_DIR)
+
+# ----- Linker flags
+
+LFLAGS = --chip=$(PIC_PROC) \
+         --opt=all --mode=free --asmlist \
+	 --debugger=$(DEBUGGER_VAL) \
+	 --rom=$(ROM_RANGES_VAL) --ram=$(RAM_RANGES_VAL) \
+	 -m$(OBJ_DIR)/$(APP).map \
+	 --output=-mcof,+elf,+intel \
+         --runtime=default --outdir=$(OBJ_DIR) --objdir=$(OBJ_DIR)
+
+# ------ Build rules
+
+.SUFFIXES:
+.SUFFIXES: .c .p1
+
+$(OBJ_DIR)/%.p1 : $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) $(INCLUDES) $@ $<
+
+# ------ Targets
+
+.PHONY : clean help
+
+all : clean app dasm
+
+app : $(APP_OBJS)
+	$(LD) $(LFLAGS) -o$(OBJ_DIR)/$(APP).elf $(APP_OBJS)
+
+dasm : app
+	$(DAS) -p $(PIC_PROC) $(APP_HEX) > $(APP_DASM)
+
+clean :
+	rm -f $(OBJ_DIR)/*.d
+	rm -f $(OBJ_DIR)/*.p1
+	rm -f $(OBJ_DIR)/*.pre
+	rm -f $(OBJ_DIR)/$(APP).*
+	rm -f $(OBJ_DIR)/startup.*
+	rm -f $(OBJ_DIR)/*.dasm
+	rm -f $(SRC_DIR)/*~
+	rm -rf *~
+	rm -rf funclist
+	rm -rf l.obj
+help:
+	@echo "Usage: make clean"
+	@echo "       make app"
+	@echo "       make dasm"
+	@echo "       make all"

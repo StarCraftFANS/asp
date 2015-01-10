@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "asp_ui.h"
+#include "asp_prod_info.h"
 #include "asp_hw.h"
 #include "asp.h"
 #include "user_io.h"
@@ -68,7 +69,7 @@ void asp_ui_execute(void)
 
   do {
     print_menu();   
-    user_io_put("ASP-R1A04>", 10);
+    user_io_put(ASP_PROD_INFO">", ASP_PROD_INFO_LEN+1);
 
     // Wait for command
     do {

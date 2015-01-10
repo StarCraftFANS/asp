@@ -44,7 +44,7 @@ OBJ_DIR = ./obj
 SRC_DIR = ./src
 SIM_DIR = ./sim
 
-APP = pic_asp
+APP = pic_asp_sdcc
 
 APP_ASMS = $(OBJ_DIR)/main.asm \
            $(OBJ_DIR)/asp_hw.asm \

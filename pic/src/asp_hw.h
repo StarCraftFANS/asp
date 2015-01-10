@@ -12,7 +12,7 @@
 #ifndef __ASP_HW_H__
 #define __ASP_HW_H__
 
-#include <pic18fregs.h>
+#include "platform.h"
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros

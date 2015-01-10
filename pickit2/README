@@ -100,7 +100,8 @@ Probe device:
 pk2cmd /P
 
 Program device:
-pk2cmd /PPIC18F2510 /F../pic/obj/pic_asp.hex /M
+pk2cmd /PPIC18F2510 /F../pic/obj/pic_asp_sdcc.hex /M
+pk2cmd /PPIC18F2510 /F../pic/obj/pic_asp_xc8.hex /M
 
 Read device:
 pk2cmd /PPIC18F2510 /GFtarget.hex

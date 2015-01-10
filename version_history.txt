@@ -1,4 +1,28 @@
 ==================================================================
+10/1-2015 EMWHBR
+
+*) R1A10
+
+*) PIC variant of ASP (R1A05):
+   - Possible to build using Microchip XC8 toolchain.
+   - Generated program size, XC8  : 3261 instructions (19.9%)
+                           , SDCC : 6940 instructions (42.4%)
+
+   - SDCC generated code, performance:
+     Read one block  : 189ms = 33(read,chksum) + 151(rs232) +   5(wait-ack)
+     Read all        : 12.2s
+     Write one block : 305ms =  5(wait-data)   + 138(rs232) + 162(write,chksum)
+     Write all       : 19.6s
+
+   - XC8 generated code, performance:
+     Read one block  : 182ms = 26(read,chksum) + 151(rs232) +   5(wait-ack)
+     Read all        : 11.7s
+     Write one block : 298ms =  5(wait-data)   + 138(rs232) + 155(write,chksum)
+     Write all       : 19.1s
+
+*) Tested using target microcontroller AT89S52@12MHz.
+
+==================================================================
 6/1-2015 EMWHBR
 
 *) R1A09

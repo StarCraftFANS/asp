@@ -22,11 +22,13 @@
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
+/*
 #ifdef DEBUG_X86
 #define DEBUG_PRINTF(fmt, args...) printf(fmt, ##args);
 #else
 #define DEBUG_PRINTF(fmt, args...) 
 #endif
+*/
 
 /////////////////////////////////////////////////////////////////////////////
 //               Function prototypes
@@ -89,7 +91,7 @@ int xmodem_send_file(XMODEM_PACKET_CALLBACK_SEND packet_callback,
     use_crc = 0;  // Old school, no CRC
   }
 
-  DEBUG_PRINTF("SEND_FILE: crc=%d\n", use_crc);
+  //DEBUG_PRINTF("SEND_FILE: crc=%d\n", use_crc);
 
   // Wait for receiver to send NAK or CRC request
   rc = xmodem_initialize_send_file(&use_crc);
@@ -161,8 +163,8 @@ int xmodem_recv_file(XMODEM_PACKET_CALLBACK_RECV packet_callback,
     xmodem_send_ctrl(XMODEM_CTRL_NAK); // Old school, no CRC
   }
 
-  DEBUG_PRINTF("RECV_FILE: crc=%d, retries=%d, timeout=%d\n",
-	       use_crc, retries, timeout_s);
+  //DEBUG_PRINTF("RECV_FILE: crc=%d, retries=%d, timeout=%d\n",
+  //	       use_crc, retries, timeout_s);
 
   // Receive entire file, packet by packet
   // For each packet, let callback handle packet
@@ -202,8 +204,8 @@ int xmodem_recv_file(XMODEM_PACKET_CALLBACK_RECV packet_callback,
 	use_crc = 0; // Switch back to original Xmodem
 	retries = 10;
 	timeout_s = 10;
-	DEBUG_PRINTF("RECV_FILE: crc=%d, retries=%d, timeout=%d\n",
-		     use_crc, retries, timeout_s);
+	//DEBUG_PRINTF("RECV_FILE: crc=%d, retries=%d, timeout=%d\n",
+	//	     use_crc, retries, timeout_s);
       }
       else {
 	handle_packets = 0;
@@ -264,17 +266,17 @@ static int xmodem_initialize_send_file(int *use_crc)
     rc = rs232_recv_timeout(&data, 6);
     if (rc == RS232_SUCCESS) {
       if ( (data == XMODEM_CTRL_CRC) && *use_crc ) {
-	DEBUG_PRINTF("CRC REQUEST\n");
+	//DEBUG_PRINTF("CRC REQUEST\n");
 	return XMODEM_SUCCESS; // CRC request
       }
       if (data == XMODEM_CTRL_NAK) {
-	DEBUG_PRINTF("NAK REQUEST\n");
+	//DEBUG_PRINTF("NAK REQUEST\n");
 	*use_crc = 0;
 	return XMODEM_SUCCESS; // NAK request
       }
     }
     else if (rc == RS232_WOULD_BLOCK) {
-      DEBUG_PRINTF("WAITING FOR REQUEST\n");
+      //DEBUG_PRINTF("WAITING FOR REQUEST\n");
       continue;
     }
     else {
@@ -335,33 +337,33 @@ static int xmodem_send(int use_crc,
     rc = rs232_recv_timeout(&data, 6);
     if (rc == RS232_SUCCESS) {
       if (data == XMODEM_CTRL_ACK) {
-	DEBUG_PRINTF("ACK RECEIVED : seq=%u, retry=%d\n",
-		     packet_seq, retries);
+	//DEBUG_PRINTF("ACK RECEIVED : seq=%u, retry=%d\n",
+	//	     packet_seq, retries);
 	rc = XMODEM_SUCCESS;     // Receiver acked, we are done
 	break;
       }
       else if (data == XMODEM_CTRL_NAK) {
 	rc = XMODEM_TIMEOUT;     // Send again, possible timeout
 	do_send = 1;
-	DEBUG_PRINTF("NAK RECEIVED : seq=%u, retry=%d\n",
-		     packet_seq, retries);
+	//DEBUG_PRINTF("NAK RECEIVED : seq=%u, retry=%d\n",
+	//	     packet_seq, retries);
       }
       else if (data == XMODEM_CTRL_CAN) {
 	rc = XMODEM_PEER_CANCEL; // Receiver canceled, we are done
-	DEBUG_PRINTF("CAN RECEIVED\n");
+	//DEBUG_PRINTF("CAN RECEIVED\n");
 	break;
       }
       else {
 	rc = XMODEM_TIMEOUT;    // Wait again, possible timeout
 	do_send = 0;            // Unexpected character received
-	DEBUG_PRINTF("UNEXPECTED RECEIVED, data=%u\n", data);
+	//DEBUG_PRINTF("UNEXPECTED RECEIVED, data=%u\n", data);
       }
     }
     else if (rc == RS232_WOULD_BLOCK) {
       rc = XMODEM_TIMEOUT;      // Wait again, possible timeout
       do_send = 0;              // No character received
-      DEBUG_PRINTF("NOTHING RECEIVED : seq=%u, retry=%d\n",
-		   packet_seq, retries);
+      //DEBUG_PRINTF("NOTHING RECEIVED : seq=%u, retry=%d\n",
+      //		   packet_seq, retries);
     }
     else {
       rc = XMODEM_MEDIA_ERROR;  // Unexpected error, we are done
@@ -494,37 +496,37 @@ static int xmodem_do_recv(int timeout_s,
     case RS232_SUCCESS:
       break;
     case RS232_WOULD_BLOCK:
-      DEBUG_PRINTF("TIMEOUT ERROR\n");
+      //DEBUG_PRINTF("TIMEOUT ERROR\n");
       rs232_purge_receiver();
       return XMODEM_TIMEOUT;
       break;
     case RS232_FAILURE:
     default:
-      DEBUG_PRINTF("MEDIA ERROR\n");
+      //DEBUG_PRINTF("MEDIA ERROR\n");
       return XMODEM_MEDIA_ERROR;
     }
 
     // Check packet components
     if ( (i==0) && (packet_p[i] != XMODEM_CTRL_SOH) ) {
       if (packet_p[i] == XMODEM_CTRL_EOT) {
-	DEBUG_PRINTF("EOT\n");
+	//DEBUG_PRINTF("EOT\n");
 	return XMODEM_END_OF_TRANSFER;
       }
       else {
-	DEBUG_PRINTF("UNEXPECTED HEADER : i=%d, h=%d\n",
-		     i, packet_p[i]);
+	//DEBUG_PRINTF("UNEXPECTED HEADER : i=%d, h=%d\n",
+	//	     i, packet_p[i]);
 	rs232_purge_receiver();
 	return XMODEM_BAD_PACKET;
       }
     }
     if ( (i==1) && (packet_p[i] != expected_seq) ) {
-      DEBUG_PRINTF("UNEXPECTED SEQ : i=%d, %d / %d\n",
-		   i, packet_p[i], expected_seq);
+      //DEBUG_PRINTF("UNEXPECTED SEQ : i=%d, %d / %d\n",
+      //	   i, packet_p[i], expected_seq);
       rs232_purge_receiver();
       return XMODEM_BAD_PACKET;
     }
     if ( (i==2) && (packet_p[i] != (255-expected_seq)) ) {
-      DEBUG_PRINTF("UNEXPECTED COMPL SEQ\n");
+      //DEBUG_PRINTF("UNEXPECTED COMPL SEQ\n");
       rs232_purge_receiver();
       return XMODEM_BAD_PACKET;
     }
@@ -539,7 +541,7 @@ static int xmodem_do_recv(int timeout_s,
       crc = xmodem_crc_update(crc, xpack->data[i]);
     }
     if (crc != expected_crc) {
-      DEBUG_PRINTF("BAD CHECKSUM (CRC)\n");
+      //DEBUG_PRINTF("BAD CHECKSUM (CRC)\n");
       rs232_purge_receiver();
       return XMODEM_BAD_PACKET;
     }
@@ -550,7 +552,7 @@ static int xmodem_do_recv(int timeout_s,
       sum += xpack->data[i];
     }
     if (sum != xpack->csum[0]) {
-      DEBUG_PRINTF("BAD CHECKSUM (SUM)\n");
+      //DEBUG_PRINTF("BAD CHECKSUM (SUM)\n");
       rs232_purge_receiver();
       return XMODEM_BAD_PACKET;
     }

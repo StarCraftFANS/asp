@@ -9,7 +9,7 @@
 // *                                                                      *
 // ************************************************************************
 
-#include <pic18fregs.h>
+#include "platform.h"
 
 #include "config_bits.h"
 #include "asp_hw.h"

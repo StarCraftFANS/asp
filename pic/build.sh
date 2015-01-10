@@ -17,21 +17,32 @@ source ./setup_environment.sh
 case "$1" in
     clean)
         echo "==[MAKE CLEAN]==="
-        make clean
+        make -f Makefile_sdcc clean
+	make -f Makefile_xc8 clean
         ;;
 
-    mcu)
-        echo "==[MAKE MCU]==="
-        make BUILD_TYPE=MCU all
+    sdcc_mcu)
+        echo "==[MAKE SDCC MCU]==="
+        make -f Makefile_sdcc BUILD_TYPE=MCU all
         ;;
 
-    sim)
-        echo "==[MAKE SIM]==="
-        make BUILD_TYPE=SIM all
+    sdcc_sim)
+        echo "==[MAKE SDCC SIMULATOR]==="
+        make -f Makefile_sdcc BUILD_TYPE=SIM all
+        ;;
+
+    xc8_mcu)
+        echo "==[MAKE XC8 MCU]==="
+        make -f Makefile_xc8 BUILD_TYPE=MCU all
+        ;;
+
+    xc8_dbg)
+        echo "==[MAKE XC8 DEBUG]==="
+        make -f Makefile_xc8 BUILD_TYPE=DBG all
         ;;
 
     *)
-        echo "Usage $0 {clean|mcu|sim}"
+        echo "Usage $0 {clean|sdcc_mcu|sdcc_sim|xc8_mcu|xc8_dbg}"
         exit 1
         ;;
 esac

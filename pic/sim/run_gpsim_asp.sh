@@ -16,8 +16,10 @@ source ../setup_environment.sh
 BUILD_DIR="../obj"
 RUN_DIR="./gpsim_run_dir"
 
+APP="pic_asp_sdcc"
+
 ### Check that simulation is possible
-if [ ! -e ${BUILD_DIR}/pic_asp.cod ]
+if [ ! -e ${BUILD_DIR}/${APP}.cod ]
 then
     echo "*** ERROR : No build files found"
     exit 1
@@ -28,9 +30,9 @@ fi
 
 ### Prepare simulation
 mkdir -pv ${RUN_DIR}/obj
-cp ${BUILD_DIR}/pic_asp{.cod,.cof,.dasm,.hex,.lst,.map} ${RUN_DIR}
+cp ${BUILD_DIR}/${APP}{.cod,.cof,.dasm,.hex,.lst,.map} ${RUN_DIR}
 cp ${BUILD_DIR}/*.asm ${RUN_DIR}/obj/
 
 ### Run simulation
 cd ${RUN_DIR}
-gpsim -s pic_asp.cod -c ../gpsim_asp.stc
+gpsim -s ${APP}.cod -c ../gpsim_asp.stc
