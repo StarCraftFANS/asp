@@ -1,6 +1,6 @@
 // ************************************************************************
 // *                                                                      *
-// * Copyright (C) 2014 Bonden i Nol (hakanbrolin@hotmail.com)            *
+// * Copyright (C) 2015 Bonden i Nol (hakanbrolin@hotmail.com)            *
 // *                                                                      *
 // * This program is free software; you can redistribute it and/or modify *
 // * it under the terms of the GNU General Public License as published by *
@@ -9,25 +9,30 @@
 // *                                                                      *
 // ************************************************************************
 
-#ifndef __AT89S52_ISP_H__
-#define __AT89S52_ISP_H__
+#ifndef __IHEX_RECORD_H__
+#define __IHEX_RECORD_H__
+
+#include <stdint.h>
 
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of macros
 /////////////////////////////////////////////////////////////////////////////
-// Return codes
-#define AT89S52_ISP_SUCCESS   0
-#define AT89S52_ISP_FAILURE  -1
+#define IHEX_RECORD_MAX_BYTES  32
+
+// Supported Intel HEX standard record types
+#define IHEX_REC_DATA  0x00
+#define IHEX_REC_EOF   0x01
 
 /////////////////////////////////////////////////////////////////////////////
-//               Definition of exported functions
+//               Definition of types
 /////////////////////////////////////////////////////////////////////////////
-extern int at89s52_isp_probe(void);
-extern int at89s52_isp_erase(void);
-extern int at89s52_isp_read_bin(void);
-extern int at89s52_isp_write_bin(void);
-extern int at89s52_isp_verify_bin(void);
-extern int at89s52_isp_write_hex(void);
-extern int at89s52_isp_verify_hex(void);
+// Intel HEX file record
+typedef struct {
+  uint8_t  nbytes;
+  uint16_t addr;
+  uint8_t  type;
+  uint8_t  data[IHEX_RECORD_MAX_BYTES];
+  uint8_t  chksum;
+} IHEX_RECORD;
 
-#endif // __AT89S52_ISP_H__
+#endif // __IHEX_RECORD_H__

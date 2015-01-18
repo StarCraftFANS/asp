@@ -57,7 +57,8 @@ APP_ASMS = $(OBJ_DIR)/main.asm \
            $(OBJ_DIR)/spi.asm \
            $(OBJ_DIR)/user_io.asm \
            $(OBJ_DIR)/utility.asm \
-           $(OBJ_DIR)/xmodem.asm
+           $(OBJ_DIR)/xmodem.asm \
+           $(OBJ_DIR)/ihex.asm
 
 APP_OBJS = $(OBJ_DIR)/main.o \
            $(OBJ_DIR)/asp_hw.o \
@@ -70,7 +71,8 @@ APP_OBJS = $(OBJ_DIR)/main.o \
            $(OBJ_DIR)/spi.o \
            $(OBJ_DIR)/user_io.o \
            $(OBJ_DIR)/utility.o \
-           $(OBJ_DIR)/xmodem.o
+           $(OBJ_DIR)/xmodem.o \
+           $(OBJ_DIR)/ihex.o
 
 APP_HEX  = $(OBJ_DIR)/$(APP).hex
 APP_DASM = $(OBJ_DIR)/$(APP).dasm

@@ -24,8 +24,10 @@
 /////////////////////////////////////////////////////////////////////////////
 int asp_chip_probe();
 int asp_chip_erase(void);
-int asp_chip_read(void);
-int asp_chip_write(void);
-int asp_chip_verify(void);
+int asp_chip_read_bin(void);
+int asp_chip_write_bin(void);
+int asp_chip_verify_bin(void);
+int asp_chip_write_hex(void);
+int asp_chip_verify_hex(void);
 
 #endif // __ASP_H__

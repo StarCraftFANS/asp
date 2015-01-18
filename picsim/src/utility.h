@@ -33,4 +33,13 @@ extern void uint16_to_hex_str(uint16_t data,
 extern void uint8_to_hex_str(uint8_t data,
 			     char *str);
 
+extern int hex_str_to_uint8(const char *str,
+			    uint8_t *data);
+
+extern int hex_str_to_uint16(const char *str,
+			     uint16_t *data);
+
+extern int hex_str_to_uint32(const char *str,
+			     uint32_t *data);
+
 #endif // __UTILITY_H__

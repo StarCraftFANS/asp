@@ -12,6 +12,7 @@
 #include <stdint.h>
 
 #include "asp_ui.h"
+#include "asp_prod_info.h"
 #include "asp_hw.h"
 #include "asp.h"
 #include "user_io.h"
@@ -27,9 +28,11 @@
 typedef enum {
   UI_CMD_PROBE,
   UI_CMD_ERASE,
-  UI_CMD_READ,
-  UI_CMD_WRITE,
-  UI_CMD_VERIFY,
+  UI_CMD_READ_BIN,
+  UI_CMD_WRITE_BIN,
+  UI_CMD_VERIFY_BIN,
+  UI_CMD_WRITE_HEX,
+  UI_CMD_VERIFY_HEX,
   UI_CMD_UNKNOWN  // Must be last enum
 } UI_CMD;
 
@@ -49,9 +52,11 @@ static UI_CMD_FUNC g_ui_cmd_func[UI_CMD_UNKNOWN] =
 {
   asp_chip_probe,
   asp_chip_erase,
-  asp_chip_read,
-  asp_chip_write,
-  asp_chip_verify  
+  asp_chip_read_bin,
+  asp_chip_write_bin,
+  asp_chip_verify_bin,
+  asp_chip_write_hex,
+  asp_chip_verify_hex
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,7 +73,7 @@ void asp_ui_execute(void)
 
   do {
     print_menu();   
-    user_io_put("ASP-R1A04>", 10);
+    user_io_put(ASP_PROD_INFO">", ASP_PROD_INFO_LEN+1);
 
     // Wait for command
     do {
@@ -81,13 +86,19 @@ void asp_ui_execute(void)
 	ui_cmd = UI_CMD_ERASE;
 	break;
       case 0x33: // '3'
-	ui_cmd = UI_CMD_READ;
+	ui_cmd = UI_CMD_READ_BIN;
 	break;
       case 0x34: // '4'
-	ui_cmd = UI_CMD_WRITE;
+	ui_cmd = UI_CMD_WRITE_BIN;
 	break;
       case 0x35: // '5'
-	ui_cmd = UI_CMD_VERIFY;
+	ui_cmd = UI_CMD_VERIFY_BIN;
+	break;
+      case 0x36: // '6'
+	ui_cmd = UI_CMD_WRITE_HEX;
+	break;
+      case 0x37: // '7'
+	ui_cmd = UI_CMD_VERIFY_HEX;
 	break;
       default:
 	ui_cmd = UI_CMD_UNKNOWN;
@@ -118,11 +129,13 @@ static void print_menu(void)
   user_io_put_line("----------------", 16);
   user_io_put_line("--  ASP MENU  --", 16);
   user_io_put_line("----------------", 16);
-  user_io_put_line("  1. probe",  10);
-  user_io_put_line("  2. erase",  10);
-  user_io_put_line("  3. read",    9);
-  user_io_put_line("  4. write",  10);
-  user_io_put_line("  5. verify", 11);
+  user_io_put_line("  1. probe",       10);
+  user_io_put_line("  2. erase",       10);
+  user_io_put_line("  3. read bin",    13);
+  user_io_put_line("  4. write bin",   14);
+  user_io_put_line("  5. verify bin",  15);
+  user_io_put_line("  6. write hex",   14);
+  user_io_put_line("  7. verify hex",  15);
   user_io_new_line();
 }
 

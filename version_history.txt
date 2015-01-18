@@ -1,4 +1,21 @@
 ==================================================================
+18/1-2015 EMWHBR
+
+*) R1A11
+
+*) PICSIM(x86_64) variant of ASP (R1A06):
+   - Synchronized with PIC variant, see below.
+
+*) PIC variant of ASP (R1A06):
+   - Added functionality to write and verify chip flash program
+     memory against a specified file in HEX format.
+
+   - Generated program size, XC8  : 4716 instructions (28.8%)
+                           , SDCC : 9745 instructions (59.5%)
+   
+*) Tested using target microcontroller AT89S52@12MHz.
+
+==================================================================
 10/1-2015 EMWHBR
 
 *) R1A10

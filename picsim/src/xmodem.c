@@ -496,7 +496,6 @@ static int xmodem_do_recv(int timeout_s,
       DEBUG_PRINTF("TIMEOUT ERROR\n");
       rs232_purge_receiver();
       return XMODEM_TIMEOUT;
-      break;
     case RS232_FAILURE:
     default:
       DEBUG_PRINTF("MEDIA ERROR\n");

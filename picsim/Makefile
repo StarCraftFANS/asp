@@ -34,6 +34,7 @@ APP_OBJS = $(OBJ_DIR)/rs232.o \
            $(OBJ_DIR)/user_io.o \
            $(OBJ_DIR)/utility.o \
            $(OBJ_DIR)/xmodem.o \
+           $(OBJ_DIR)/ihex.o \
            $(OBJ_DIR)/at89s52_io.o \
            $(OBJ_DIR)/at89s52_isp.o \
            $(OBJ_DIR)/asp_ui.o \

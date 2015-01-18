@@ -57,7 +57,8 @@ APP_OBJS = $(OBJ_DIR)/main.p1 \
            $(OBJ_DIR)/spi.p1 \
            $(OBJ_DIR)/user_io.p1 \
            $(OBJ_DIR)/utility.p1 \
-           $(OBJ_DIR)/xmodem.p1
+           $(OBJ_DIR)/xmodem.p1 \
+           $(OBJ_DIR)/ihex.p1
 
 APP_HEX  = $(OBJ_DIR)/$(APP).hex
 APP_DASM = $(OBJ_DIR)/$(APP).dasm

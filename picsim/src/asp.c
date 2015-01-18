@@ -54,7 +54,7 @@ int asp_chip_erase(void)
 
 ////////////////////////////////////////////////////////////////
 
-int asp_chip_read(void)
+int asp_chip_read_bin(void)
 {
   if (at89s52_isp_read_bin() != AT89S52_ISP_SUCCESS) {
     return ASP_FAILURE;
@@ -64,7 +64,7 @@ int asp_chip_read(void)
 
 ////////////////////////////////////////////////////////////////
 
-int asp_chip_write(void)
+int asp_chip_write_bin(void)
 {
   if (at89s52_isp_write_bin() != AT89S52_ISP_SUCCESS) {
     return ASP_FAILURE;
@@ -74,9 +74,29 @@ int asp_chip_write(void)
 
 ////////////////////////////////////////////////////////////////
 
-int asp_chip_verify(void)
+int asp_chip_verify_bin(void)
 {
   if (at89s52_isp_verify_bin() != AT89S52_ISP_SUCCESS) {
+    return ASP_FAILURE;
+  }
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+int asp_chip_write_hex(void)
+{
+  if (at89s52_isp_write_hex() != AT89S52_ISP_SUCCESS) {
+    return ASP_FAILURE;
+  }
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
+int asp_chip_verify_hex(void)
+{
+  if (at89s52_isp_verify_hex() != AT89S52_ISP_SUCCESS) {
     return ASP_FAILURE;
   }
   return ASP_SUCCESS;

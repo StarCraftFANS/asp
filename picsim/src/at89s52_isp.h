@@ -27,5 +27,7 @@ extern int at89s52_isp_erase(void);
 extern int at89s52_isp_read_bin(void);
 extern int at89s52_isp_write_bin(void);
 extern int at89s52_isp_verify_bin(void);
+extern int at89s52_isp_write_hex(void);
+extern int at89s52_isp_verify_hex(void);
 
 #endif // __AT89S52_ISP_H__
