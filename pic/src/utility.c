@@ -148,17 +148,20 @@ static int hex_str_to_uintx(const char *str,
 
   exp = 4 * (nbytes*2 - 1);
   for (i=0; i < (nbytes * 2); i++) {
-    if ( (str[i] < '0') ||
-	 (str[i] > 'F') ||
-	 ((str[i] > '9') && (str[i] < 'A')) ) {
+    if ( !( (str[i] >= '0') && (str[i] <= '9') ) &&
+         !( (str[i] >= 'A') && (str[i] <= 'F') ) &&
+         !( (str[i] >= 'a') && (str[i] <= 'f') ) ) {
       return UTILITY_FAILURE;
     }
-    if (str[i] < 'A') {
+    if (str[i] >= '0' && (str[i] <= '9')) {
       tmp = (uint8_t)str[i] - 0x30;      // 0-9
     }
-    else {
+    else if (str[i] >= 'A' && (str[i] <= 'F')) {
       tmp = (uint8_t)str[i] - 0x41 + 10; // A-F
-    } 
+    }
+    else {
+      tmp = (uint8_t)str[i] - 0x61 + 10; // a-f
+    }
     *data += (uint32_t)((uint32_t)1 << exp) * (uint32_t)tmp;
     exp -= 4;
   }

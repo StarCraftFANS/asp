@@ -31,6 +31,7 @@ typedef enum {
   UI_CMD_READ_BIN,
   UI_CMD_WRITE_BIN,
   UI_CMD_VERIFY_BIN,
+  UI_CMD_READ_HEX,
   UI_CMD_WRITE_HEX,
   UI_CMD_VERIFY_HEX,
   UI_CMD_UNKNOWN  // Must be last enum
@@ -50,13 +51,14 @@ static void clear_errors(void);
 /////////////////////////////////////////////////////////////////////////////
 static UI_CMD_FUNC g_ui_cmd_func[UI_CMD_UNKNOWN] =
 {
-  asp_chip_probe,
-  asp_chip_erase,
-  asp_chip_read_bin,
-  asp_chip_write_bin,
-  asp_chip_verify_bin,
-  asp_chip_write_hex,
-  asp_chip_verify_hex
+  asp_chip_probe,          // UI_CMD_PROBE
+  asp_chip_erase,          // UI_CMD_ERASE
+  asp_chip_read_bin,       // UI_CMD_READ_BIN
+  asp_chip_write_bin,      // UI_CMD_WRITE_BIN
+  asp_chip_verify_bin,     // UI_CMD_VERIFY_BIN
+  asp_chip_read_hex,       // UI_CMD_READ_HEX
+  asp_chip_write_hex,      // UI_CMD_VERIFY_HEX
+  asp_chip_verify_hex      // UI_CMD_VERIFY_HEX
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -95,9 +97,12 @@ void asp_ui_execute(void)
 	ui_cmd = UI_CMD_VERIFY_BIN;
 	break;
       case 0x36: // '6'
-	ui_cmd = UI_CMD_WRITE_HEX;
+	ui_cmd = UI_CMD_READ_HEX;
 	break;
       case 0x37: // '7'
+	ui_cmd = UI_CMD_WRITE_HEX;
+	break;
+      case 0x38: // '8'
 	ui_cmd = UI_CMD_VERIFY_HEX;
 	break;
       default:
@@ -134,8 +139,9 @@ static void print_menu(void)
   user_io_put_line("  3. read bin",    13);
   user_io_put_line("  4. write bin",   14);
   user_io_put_line("  5. verify bin",  15);
-  user_io_put_line("  6. write hex",   14);
-  user_io_put_line("  7. verify hex",  15);
+  user_io_put_line("  6. read hex",    13);
+  user_io_put_line("  7. write hex",   14);
+  user_io_put_line("  8. verify hex",  15);
   user_io_new_line();
 }
 

@@ -1,4 +1,25 @@
 ==================================================================
+30/4-2015 EMWHBR
+
+*) R1A12
+
+*) PICSIM(x86_64) variant of ASP (R1A07):
+   - Synchronized with PIC variant, see below.
+
+*) PIC variant of ASP (R1A07):
+   - Added functionality to read chip flash program memory
+     and save to file in HEX format.
+
+   - Bug fix:
+     File in HEX format couldn't be written to chip flash
+     program memory if content of file was in lower case.
+
+   - Generated program size, XC8  :  5739 instructions (35.0%)
+                           , SDCC : 11491 instructions (70.1%)
+   
+*) Tested using target microcontroller AT89S52@12MHz.
+
+==================================================================
 18/1-2015 EMWHBR
 
 *) R1A11

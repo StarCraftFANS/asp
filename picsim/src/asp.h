@@ -27,6 +27,7 @@ int asp_chip_erase(void);
 int asp_chip_read_bin(void);
 int asp_chip_write_bin(void);
 int asp_chip_verify_bin(void);
+int asp_chip_read_hex(void);
 int asp_chip_write_hex(void);
 int asp_chip_verify_hex(void);
 

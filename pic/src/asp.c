@@ -84,6 +84,16 @@ int asp_chip_verify_bin(void)
 
 ////////////////////////////////////////////////////////////////
 
+int asp_chip_read_hex(void)
+{
+  if (at89s52_isp_read_hex() != AT89S52_ISP_SUCCESS) {
+    return ASP_FAILURE;
+  }
+  return ASP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
 int asp_chip_write_hex(void)
 {
   if (at89s52_isp_write_hex() != AT89S52_ISP_SUCCESS) {

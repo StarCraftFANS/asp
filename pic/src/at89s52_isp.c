@@ -37,16 +37,20 @@ static int isp_erase(void);
 static int isp_read_bin(void);
 static int isp_write_bin(void);
 static int isp_verify_bin(void);
+static int isp_read_hex(void);
 static int isp_write_hex(void);
 static int isp_verify_hex(void);
 
 static void signal_xmodem_error(int rc);
 static void signal_xmodem_activity(void);
 
-// Callback functions
+// Callback functions, binary data
 static int cb_xmodem_read_bin_data(XMODEM_PACKET *xpack);
 static int cb_xmodem_write_bin_data(const XMODEM_PACKET *xpack);
 static int cb_xmodem_verify_bin_data(const XMODEM_PACKET *xpack);
+
+// Callback functions, Intel HEX data
+static int cb_xmodem_read_hex_data(XMODEM_PACKET *xpack);
 static int cb_xmodem_write_hex_data(const XMODEM_PACKET *xpack);
 static int cb_xmodem_verify_hex_data(const XMODEM_PACKET *xpack);
 
@@ -136,6 +140,21 @@ int at89s52_isp_verify_bin(void)
   rc = isp_verify_bin();
 
  at89s52_isp_verify_bin_exit:
+  disable_isp();     // Deactivate RESET pin
+  return rc;
+}
+
+////////////////////////////////////////////////////////////////
+
+int at89s52_isp_read_hex(void)
+{
+  int rc;
+
+  rc = enable_isp();  // Activate RESET pin
+  if (rc != AT89S52_ISP_SUCCESS) goto at89s52_isp_read_hex_exit;
+  rc = isp_read_hex();
+
+ at89s52_isp_read_hex_exit:
   disable_isp();     // Deactivate RESET pin
   return rc;
 }
@@ -314,6 +333,45 @@ static int isp_verify_bin(void)
 
 ////////////////////////////////////////////////////////////////
 
+static int isp_read_hex(void)
+{
+  int rc;
+  uint32_t file_size_bytes;
+  uint16_t xmodem_packets; // Keep track of packets to send
+
+  user_io_new_line();
+  user_io_put_line("XMODEM recv now", 15);
+  ACTIV_LED_ON;
+
+  // Initialize opaque object
+  ihex_initialize(&g_ihex);
+
+  // Send a HEX file, let callback handle each packet
+  // and read packet data from flash.
+  g_chip_addr = 0;
+  rc = ihex_get_file_size(IHEX_RECORD_MAX_BYTES,
+			  AT89S52_FLASH_MEMORY_SIZE / IHEX_RECORD_MAX_BYTES,
+			  &file_size_bytes);
+
+  xmodem_packets = file_size_bytes / XMODEM_PACKET_DATA_BYTES;
+  if ( (file_size_bytes % XMODEM_PACKET_DATA_BYTES) != 0) {
+    xmodem_packets++; // Add one extra packet if necessary
+  }
+
+  rc = xmodem_send_file(cb_xmodem_read_hex_data,
+			xmodem_packets,
+			XMODEM_SEND_FLAGS);
+  ACTIV_LED_OFF;
+  if (rc != XMODEM_SUCCESS) {
+    signal_xmodem_error(rc);
+    return AT89S52_ISP_FAILURE;
+  }
+
+  return AT89S52_ISP_SUCCESS;
+}
+
+////////////////////////////////////////////////////////////////
+
 static int isp_write_hex(void)
 {
   int rc;
@@ -477,6 +535,72 @@ static int cb_xmodem_verify_bin_data(const XMODEM_PACKET *xpack)
 
 ////////////////////////////////////////////////////////////////
 
+static int cb_xmodem_read_hex_data(XMODEM_PACKET *xpack)
+{
+  int rc;
+  int i;
+  uint8_t xmodem_bytes = XMODEM_PACKET_DATA_BYTES;
+  uint8_t xmodem_data_index = 0;
+  uint8_t actual_bytes;
+  uint8_t *ascii_data;
+  uint8_t ihex_rec_nbytes;
+  uint16_t ihex_rec_addr;
+  uint8_t ihex_rec_type;
+
+  signal_xmodem_activity();
+
+  // Read data from chip and create ASCII HEX records
+  // and place them in the XMODEM packet for transmission
+  while (xmodem_bytes) {
+    // Get any available data from ASCII HEX record
+    rc = ihex_get_ascii_record(&g_ihex,
+			       xmodem_bytes,
+			       &actual_bytes,
+			       &ascii_data);
+    if (actual_bytes) {
+      // Append ASCII data to packet
+      for (i=0; i < actual_bytes; i++) {
+	xpack->data[xmodem_data_index++] = ascii_data[i];
+      }
+      xmodem_bytes -= actual_bytes;
+    }
+    else {
+      if (g_chip_addr < AT89S52_FLASH_MEMORY_SIZE) {
+	// Read binary data from chip
+	rc = at89s52_io_read_flash(g_chip_addr,
+				   g_chip_data,
+				   IHEX_RECORD_MAX_BYTES);
+	if (rc != AT89S52_SUCCESS) {    
+	  TARGET_ERR_LED_ON; // Signal error
+	  return 1;
+	}	
+	ihex_rec_nbytes = IHEX_RECORD_MAX_BYTES;
+	ihex_rec_addr = g_chip_addr;
+	ihex_rec_type = IHEX_REC_DATA;
+
+	g_chip_addr += IHEX_RECORD_MAX_BYTES; // Next chip address
+      }
+      else {
+	// All data has been read from chip
+	ihex_rec_nbytes = 0;
+	ihex_rec_addr = 0;
+	ihex_rec_type = IHEX_REC_EOF;
+      }
+
+      // Create one ASCII HEX record
+      ihex_bin_to_ascii_record(&g_ihex,
+			       ihex_rec_addr,
+			       ihex_rec_type,
+			       g_chip_data,
+			       ihex_rec_nbytes);      
+    }
+  }
+
+  return 0;
+}
+
+////////////////////////////////////////////////////////////////
+
 static int cb_xmodem_write_hex_data(const XMODEM_PACKET *xpack)
 {
   int rc;
@@ -488,14 +612,14 @@ static int cb_xmodem_write_hex_data(const XMODEM_PACKET *xpack)
   // Extract HEX records from packet and
   // write data in each HEX record to chip
   for (i=0; i < XMODEM_PACKET_DATA_BYTES; i++) {    
-    rc = ihex_parse_record(&g_ihex, xpack->data[i]);
+    rc = ihex_ascii_to_bin_record(&g_ihex, xpack->data[i]);
     if ( (rc != IHEX_SUCCESS) &&
 	 (rc != IHEX_RECORD_READY) ) {
       HOST_ERR_LED_ON; // Signal error
       return 1;
     }
     if (rc == IHEX_RECORD_READY) {  // We have a full HEX record
-      ihex_get_record(&g_ihex, &ihex_rec);
+      ihex_get_bin_record(&g_ihex, &ihex_rec);
       if (ihex_rec->type == IHEX_REC_DATA) {
 	rc = at89s52_io_write_flash(ihex_rec->addr,
 				    ihex_rec->data,
@@ -524,14 +648,14 @@ static int cb_xmodem_verify_hex_data(const XMODEM_PACKET *xpack)
   // Extract HEX records from packet and compare
   // data in each HEX record with data read from chip
   for (i=0; i < XMODEM_PACKET_DATA_BYTES; i++) {    
-    rc = ihex_parse_record(&g_ihex, xpack->data[i]);
+    rc = ihex_ascii_to_bin_record(&g_ihex, xpack->data[i]);
     if ( (rc != IHEX_SUCCESS) &&
 	 (rc != IHEX_RECORD_READY) ) {
       HOST_ERR_LED_ON; // Signal error
       return 1;
     }
     if (rc == IHEX_RECORD_READY) {  // We have a full HEX record      
-      ihex_get_record(&g_ihex, &ihex_rec);
+      ihex_get_bin_record(&g_ihex, &ihex_rec);
       if (ihex_rec->type == IHEX_REC_DATA) {
 	// Read data from chip
 	rc = at89s52_io_read_flash(ihex_rec->addr,

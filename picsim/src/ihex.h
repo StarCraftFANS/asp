@@ -36,12 +36,27 @@ typedef IHEX *IHEX_HANDLE;
 /////////////////////////////////////////////////////////////////////////////
 //               Definition of exported functions
 /////////////////////////////////////////////////////////////////////////////
+int ihex_get_file_size(uint8_t record_data_bytes,
+		       uint16_t records,
+		       uint32_t *nbytes);
+
 int ihex_initialize(IHEX_HANDLE handle);
 
-int ihex_parse_record(IHEX_HANDLE handle,
-		      uint8_t data);
+int ihex_ascii_to_bin_record(IHEX_HANDLE handle,
+			     uint8_t data);
 
-int ihex_get_record(IHEX_HANDLE handle,
-		    IHEX_RECORD **rec);
+int ihex_get_bin_record(IHEX_HANDLE handle,
+			IHEX_RECORD **rec);
+
+int ihex_bin_to_ascii_record(IHEX_HANDLE handle,
+			     uint16_t addr,
+			     uint8_t type,
+			     const uint8_t *data,
+			     uint8_t nbytes);
+
+int ihex_get_ascii_record(IHEX_HANDLE handle,
+			  uint8_t requested_bytes,
+			  uint8_t *actual_bytes,
+			  uint8_t **data);
 
 #endif // __IHEX_H__
